@@ -1,0 +1,36 @@
+{
+  "model_type": "StandardScaler + LogisticRegression(C=1.0)",
+  "features": [
+    "diff_self",
+    "diff_pool",
+    "diff_min",
+    "endpoint_span",
+    "j_score",
+    "max_self",
+    "min_self",
+    "rank_u",
+    "rank_v",
+    "min_rank",
+    "max_rank",
+    "rank_sum",
+    "both_in_top2",
+    "both_in_top3",
+    "both_in_top5",
+    "router_prob"
+  ],
+  "calibrated_threshold": 0.57,
+  "cv_metrics": {
+    "total_proposals": 482,
+    "total_true_proposals": 112,
+    "total_spurious_proposals": 370,
+    "cv_tp": 57,
+    "cv_fp": 29,
+    "cv_recall": 0.5089285714285714,
+    "cv_precision": 0.6627906976744186,
+    "cv_spurious_rejection_rate": 0.9216216216216216
+  },
+  "upstream_router": "artifacts-v1.6/workflow_router.joblib",
+  "pair_scorer": "BAAI/bge-reranker-base (tau_self=-0.5, tau_pool=-1.0)",
+  "fallback": "v1.3 exact bit-for-bit",
+  "config_sha256": "5be7becdc389871d92dcab4b37a3a8e9687fe51930a8fb2de0d50e0ac49494ea"
+}
