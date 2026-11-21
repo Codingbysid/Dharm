@@ -1,0 +1,13 @@
+{
+  "model": "BAAI/bge-reranker-base",
+  "card_format": "pair_joint_card_v1",
+  "promotion_rule": "joint_margin_promotion",
+  "tau_self": -0.5,
+  "tau_pool": -1.0,
+  "cv_score": 1.29,
+  "cv_synth_acc": 0.5945454545454545,
+  "cv_neg_preserved": 0.4636363636363637,
+  "cross_validation": "5-fold-GroupKFold-by-pair_group",
+  "calibration_dataset": "decisions_v0.2-scenarios-54-pairs",
+  "config_sha256": "49d5f7a5b0d19556d2976d2067d972d74752919c8cd04248ba99c955a8fe279e"
+}
