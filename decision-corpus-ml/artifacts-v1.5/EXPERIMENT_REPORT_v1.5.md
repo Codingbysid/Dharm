@@ -38,8 +38,8 @@ ca7e5ebb9ddab447a8f874ade4da05a0d82db691d825ba50dcf9097af94232c8  data/chanakya_
 - **Bi-Encoder**: `BAAI/bge-small-en-v1.5`
 - **Cross-Encoder Reranker**: `BAAI/bge-reranker-base` (zero-shot on `passage_card`)
 - **NLI Model**: `cross-encoder/nli-deberta-v3-base`
-- **Abstention Classifier**: `artifacts-v1.1/abstention_clf.joblib` (100% precision & recall)
 - **Primary Pool Coverage**: 36 of 38 answerable queries (94.74%) reached the candidate pool. Q01 (`D001`) and Q20 (`D040`) are retrieval misses outside the pool.
+- **Dual-Target Synthesis Pool Coverage**: Exactly **10 of 10 synthesis queries (100.0%)** contain both required gold targets in the candidate pool. Missing query/target IDs: **None**.
 
 ---
 
@@ -91,9 +91,9 @@ ca7e5ebb9ddab447a8f874ade4da05a0d82db691d825ba50dcf9097af94232c8  data/chanakya_
    - Transfers are computed from an immutable pre-transfer snapshot, proving **100% iteration-order invariance**.
 4. **Retain-Only Rule Alignment**:
    - Isolating `retain_self_when` into the rule card prevented negative flip conditions from entailing with competing dilemma scenarios, boosting new-slice pre-graph Recall@3 from 40.91% to 54.55%.
-5. **Workflow Interference on Arbitration**:
-   - Pre-workflow, v1.5 won **5 of 14 flips** (retaining P2, P6, P9, P13 and winning Q10).
-   - Post-workflow, unconstrained synthesis bonuses on complementary pairs (`D055/D057` on Q10, `D035/D023` on Q33) boosted bystander passages over gold primaries, reducing flips to 4/14.
+5. **Exact Stage Traces for Q10 and Q33**:
+   - **Q10 (`D036`)**: `D036` was rank #1 pre-arbitration (0.7244) and rank #1 post-arbitration (0.8014). It was overtaken during workflow ordering by **`D055`** (boosted to 0.8156 via the `D055/D057` pair where `min_base = 0.3659`), demoting `D036` to #2. Raising `wf_min_thresh` to 0.50 blocks `D055` (`0.3659 < 0.50`) and preserves `D036` at #1.
+   - **Q33 (`D089`)**: Pre-arbitration, `D089` was rank #2 (0.8495, behind `D038` at 0.9297). During arbitration, `D035` was boosted to 1.0008 via `D036 -> D035` flip transfer and overtook `D089` (#2 $\to$ #3). During workflow ordering, **`D023`** (`min_base = 0.6447`) was boosted to 0.9165 via `D023/D035` workflow bonus and overtook `D089` (#3 $\to$ #4 outside top-3). Raising `wf_min_thresh` to 0.50 does not save `D089` because `0.6447 >= 0.50`.
 
 ---
 
@@ -105,14 +105,14 @@ ca7e5ebb9ddab447a8f874ade4da05a0d82db691d825ba50dcf9097af94232c8  data/chanakya_
 | **P2** | Q03/Q04 | D007/D023 | WIN (2/2) | WIN (2/2) | **RETAINED** | Both variants match gold primaries |
 | **P3** | Q05/Q06 | D015/D017 | LOSS | LOSS | SHARED MISS | `D073` ranked #1 on both variants |
 | **P4** | Q07/Q08 | D025/D026 | LOSS | LOSS | SHARED MISS | Q08 ranks `D025` over `D026` |
-| **P5** | Q09/Q10 | D035/D036 | LOSS | LOSS | SHARED MISS | Q10 lost primary to `D055` after workflow boost |
+| **P5** | Q09/Q10 | D035/D036 | LOSS | LOSS | SHARED MISS | Q10 lost primary to `D055` after workflow boost (`D055` min_base 0.3659) |
 | **P6** | Q11/Q12 | D003/D006 | WIN (2/2) | WIN (2/2) | **RETAINED** | Both variants match gold primaries |
 | **P7** | Q19/Q20 | D039/D040 | LOSS | LOSS | SHARED MISS | Q20 primary `D040` missed from Stage-1 retrieval pool |
 | **P8** | Q21/Q22 | D049/D050 | LOSS | LOSS | SHARED MISS | `D036` bystander placed #1 |
 | **P9** | Q25/Q26 | D057/D058 | WIN (2/2) | WIN (2/2) | **RETAINED** | Both variants match gold primaries |
 | **P10** | Q27/Q28 | D067/D068 | LOSS | LOSS | SHARED MISS | Both variants missed top-3 |
 | **P11** | Q31/Q32 | D085/D086 | LOSS | LOSS | SHARED MISS | Q31 ranks `D051`; Q32 ranks `D085` |
-| **P12** | Q33/Q34 | D089/D090 | WIN (2/2) | LOSS | **LOST** | Q33 fell from #1 to miss due to workflow bonus on `D035` |
+| **P12** | Q33/Q34 | D089/D090 | WIN (2/2) | LOSS | **LOST** | Q33 overtaken by `D035` in arbitration and `D023` in workflow |
 | **P13** | Q37/Q38 | D093/D094 | WIN (2/2) | WIN (2/2) | **RETAINED** | Both variants match gold primaries |
 | **P14** | Q39/Q40 | D105/D106 | LOSS | LOSS | SHARED MISS | `D032` placed #1 on both variants |
 

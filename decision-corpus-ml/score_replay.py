@@ -345,7 +345,8 @@ def main():
     ap.add_argument("--trace_edges", action="store_true", help="Print all edge trace rows for inspected query")
     ap.add_argument("--weights", type=str, default="0.55,0.30,0.15", help="Weights as w_rrf,w_ce,w_nli")
     ap.add_argument("--rule_mode", choices=["composite", "retain_only", "none"], default="retain_only")
-    ap.add_argument("--edge_mode", choices=["directed_v1_5", "legacy_v1_4"], default="directed_v1_5")
+    ap.add_argument("--wf_min_thresh", type=float, default=0.35, help="Minimum endpoint score threshold for workflow ordering pass")
+    ap.add_argument("--wf_max_thresh", type=float, default=0.68, help="Maximum endpoint score threshold for workflow ordering pass")
     ap.add_argument("--no_workflow", action="store_true", help="Disable workflow synthesis ordering")
     ap.add_argument("--verify_parity", action="store_true", help="Verify exact parity against v1.4 baseline")
     args = ap.parse_args()
@@ -380,6 +381,8 @@ def main():
             rule_mode=args.rule_mode,
             edge_mode=args.edge_mode,
             workflow_active=not args.no_workflow,
+            wf_min_thresh=args.wf_min_thresh,
+            wf_max_thresh=args.wf_max_thresh,
         )
 
         print(f"=== Score Replay for {res['query_id']} ({res['query_type']}) ===")
@@ -421,6 +424,8 @@ def main():
             rule_mode=args.rule_mode,
             edge_mode=args.edge_mode,
             workflow_active=not args.no_workflow,
+            wf_min_thresh=args.wf_min_thresh,
+            wf_max_thresh=args.wf_max_thresh,
         )
         for q in cache["queries"]
     ]

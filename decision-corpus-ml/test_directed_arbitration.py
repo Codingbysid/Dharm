@@ -320,7 +320,77 @@ def test_workflow_ordering_separated():
     assert res_with_wf["post_flip_scores"] == res_no_wf["post_flip_scores"]
     assert res_with_wf["workflow_traces"][0]["gate_passed"] is True
     assert res_with_wf["workflow_traces"][0]["first"] == "X"
+    assert res_with_wf["workflow_traces"][0]["first"] == "X"
     assert res_with_wf["workflow_traces"][0]["second"] == "Y"
+
+
+def test_ranking_interface_metadata_invariance(corpus_records):
+    """Demonstrate identical rankings when benchmark metadata is removed or shuffled.
+    
+    The ranking function consumes only dilemma inputs, graph, and candidate scores.
+    Query IDs, query_type, pair groups, and gold passage IDs remain strictly on the
+    evaluation side of the interface.
+    """
+    cache_path = Path("decision-corpus-ml/artifacts-v1.5/score_replay_data.json")
+    if not cache_path.exists():
+        cache_path = Path("artifacts-v1.5/score_replay_data.json")
+    cache = json.loads(cache_path.read_text(encoding="utf8"))
+
+    # Baseline rankings with full evaluation metadata present
+    base_preds = [
+        replay_query(q, corpus_records, wf_min_thresh=0.50)
+        for q in cache["queries"]
+    ]
+
+    # Test A: Benchmark metadata completely stripped
+    stripped_queries = []
+    for q in cache["queries"]:
+        stripped_q = {
+            "query_id": "ANONYMOUS_QUERY",
+            "query_type": "arbitration_pair",  # dummy
+            "pair_group": None,
+            "gold_primary_id": None,
+            "gold_competing_id": None,
+            "seeds": q["seeds"],
+            "pool": q["pool"],
+            "abstained": q["abstained"],
+            "abstention_prob": q["abstention_prob"],
+            "rrf_norm": q["rrf_norm"],
+            "ce_norm": q["ce_norm"],
+            "nli_rule_retain_norm": q["nli_rule_retain_norm"],
+            "r_scores": q["r_scores"],
+            "f_scores": q["f_scores"],
+        }
+        stripped_queries.append(stripped_q)
+
+    stripped_preds = [
+        replay_query(sq, corpus_records, wf_min_thresh=0.50)
+        for sq in stripped_queries
+    ]
+
+    for i, (orig, stripped) in enumerate(zip(base_preds, stripped_preds)):
+        assert orig["top3"] == stripped["top3"], f"Query {i}: top3 changed when metadata stripped"
+        assert orig["primary"] == stripped["primary"], f"Query {i}: primary changed when metadata stripped"
+        for k in orig["pool"]:
+            assert orig["post_workflow_scores"][k] == pytest.approx(
+                stripped["post_workflow_scores"][k], abs=1e-9
+            )
+
+    # Test B: Shuffled query order
+    indices = list(range(len(cache["queries"])))
+    shuffled_indices = indices.copy()
+    random.Random(42).shuffle(shuffled_indices)
+    shuffled_queries = [cache["queries"][i] for i in shuffled_indices]
+
+    shuffled_preds = [
+        replay_query(sq, corpus_records, wf_min_thresh=0.50)
+        for sq in shuffled_queries
+    ]
+
+    for shuff_pred, orig_idx in zip(shuffled_preds, shuffled_indices):
+        orig = base_preds[orig_idx]
+        assert orig["top3"] == shuff_pred["top3"], f"Query {orig['query_id']}: ranking altered under order shuffle"
+        assert orig["primary"] == shuff_pred["primary"]
 
 
 if __name__ == "__main__":
@@ -337,4 +407,6 @@ if __name__ == "__main__":
     test_iteration_order_invariance()
     print("Running test_workflow_ordering_separated...")
     test_workflow_ordering_separated()
-    print("\n✓ ALL 6 DIRECTED ARBITRATION TESTS PASSED.")
+    print("Running test_ranking_interface_metadata_invariance...")
+    test_ranking_interface_metadata_invariance(records)
+    print("\n✓ ALL 7 TESTS PASSED.")
