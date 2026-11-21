@@ -1,0 +1,24 @@
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache & build files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Training temporary / scratch runs
+.decision-run-*/
+
+# Model binary weights (>100MB exceeds GitHub push limit; reproduced deterministically via scripts)
+*.safetensors
+*.pt
+*.bin
+*.onnx
+
+# System & OS metadata
+.DS_Store
+Thumbs.db

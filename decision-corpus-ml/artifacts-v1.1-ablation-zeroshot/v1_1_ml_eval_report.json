@@ -1,0 +1,3361 @@
+{
+  "version": "v1.1",
+  "config": {
+    "epochs_ce": 2,
+    "lr": 1e-05,
+    "batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "max_length": 384,
+    "device": "cpu",
+    "data_dir": "data",
+    "out_dir": "artifacts-v1.1-ablation-zeroshot",
+    "skip_finetune": true,
+    "seed": 42
+  },
+  "device": "cpu",
+  "models": [
+    "BAAI/bge-small-en-v1.5",
+    "BAAI/bge-reranker-base"
+  ],
+  "torch_version": "2.6.0",
+  "fingerprints": {
+    "decisions_v0.2.jsonl": "18d35df30acf268c76088f477e328688bd56220d18abb0cbf9b8de4ec260043f",
+    "chanakya_daily_supplement.jsonl": "ca7e5ebb9ddab447a8f874ade4da05a0d82db691d825ba50dcf9097af94232c8",
+    "eval_queries_v0.2.jsonl": "6a284a3250bba9ad08c5aee9a0ce8ec0032290ab8982758726498a9ba6bd96e9"
+  },
+  "baseline_tfidf": {
+    "original": {
+      "recall_at_3": 0.8125,
+      "flip": [
+        4,
+        6
+      ],
+      "abstention_precision": [
+        2,
+        2
+      ],
+      "abstention_recall": [
+        2,
+        2
+      ],
+      "ordered_synthesis": [
+        2,
+        4
+      ]
+    },
+    "new": {
+      "recall_at_3": 0.6590909090909091,
+      "flip": [
+        0,
+        8
+      ],
+      "abstention_precision": [
+        0,
+        0
+      ],
+      "abstention_recall": [
+        0,
+        2
+      ],
+      "ordered_synthesis": [
+        3,
+        6
+      ]
+    },
+    "all": {
+      "recall_at_3": 0.7236842105263158,
+      "flip": [
+        4,
+        14
+      ],
+      "abstention_precision": [
+        2,
+        2
+      ],
+      "abstention_recall": [
+        2,
+        4
+      ],
+      "ordered_synthesis": [
+        5,
+        10
+      ]
+    }
+  },
+  "baseline_v1_0": {
+    "original": {
+      "recall_at_3": 0.65625,
+      "flip": [
+        1,
+        6
+      ],
+      "abstention_precision": [
+        2,
+        9
+      ],
+      "abstention_recall": [
+        2,
+        2
+      ],
+      "ordered_synthesis": [
+        0,
+        4
+      ]
+    },
+    "new": {
+      "recall_at_3": 0.40909,
+      "flip": [
+        1,
+        8
+      ],
+      "abstention_precision": [
+        2,
+        10
+      ],
+      "abstention_recall": [
+        2,
+        2
+      ],
+      "ordered_synthesis": [
+        0,
+        6
+      ]
+    },
+    "all": {
+      "recall_at_3": 0.51316,
+      "flip": [
+        2,
+        14
+      ],
+      "abstention_precision": [
+        4,
+        19
+      ],
+      "abstention_recall": [
+        4,
+        4
+      ],
+      "ordered_synthesis": [
+        0,
+        10
+      ]
+    }
+  },
+  "metrics": {
+    "original": {
+      "recall_at_3": 0.5625,
+      "flip": [
+        2,
+        6
+      ],
+      "abstention_precision": [
+        2,
+        2
+      ],
+      "abstention_recall": [
+        2,
+        2
+      ],
+      "ordered_synthesis": [
+        0,
+        4
+      ]
+    },
+    "new": {
+      "recall_at_3": 0.5681818181818182,
+      "flip": [
+        0,
+        8
+      ],
+      "abstention_precision": [
+        2,
+        2
+      ],
+      "abstention_recall": [
+        2,
+        2
+      ],
+      "ordered_synthesis": [
+        0,
+        6
+      ]
+    },
+    "all": {
+      "recall_at_3": 0.5657894736842105,
+      "flip": [
+        2,
+        14
+      ],
+      "abstention_precision": [
+        4,
+        4
+      ],
+      "abstention_recall": [
+        4,
+        4
+      ],
+      "ordered_synthesis": [
+        0,
+        10
+      ]
+    }
+  },
+  "predictions": [
+    {
+      "query_id": "Q01",
+      "query_type": "arbitration_pair",
+      "pair_group": "P1",
+      "dilemma_text": "Three villages share a ferry landing. Their representatives meet Friday to agree a temporary access plan. A clerk can reserve the only accessible berth without deciding the plan. The reservation expires next month. What comes first?",
+      "gold_primary_id": "D001",
+      "gold_competing_id": "D010",
+      "deciding_variable": "Time remaining to preserve the berth",
+      "distractor_ids": [
+        "D019",
+        "D013"
+      ],
+      "expected_guidance_summary": "Convene the representatives and compare access constraints while reservation time remains.",
+      "seeds": [
+        "D042",
+        "D074",
+        "D078",
+        "D054",
+        "D019"
+      ],
+      "pool": [
+        "D005",
+        "D019",
+        "D024",
+        "D038",
+        "D041",
+        "D042",
+        "D050",
+        "D053",
+        "D054",
+        "D073",
+        "D074",
+        "D077",
+        "D078"
+      ],
+      "primary": "D073",
+      "top3": [
+        "D073",
+        "D074",
+        "D053"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.17712832973716633,
+      "base_relevance": {
+        "D005": 3.7288835301296785e-05,
+        "D019": 0.00013245460286270827,
+        "D024": 3.732569530257024e-05,
+        "D038": 3.7311212508939207e-05,
+        "D041": 3.729395757545717e-05,
+        "D042": 3.758411548915319e-05,
+        "D050": 3.7329289625631645e-05,
+        "D053": 0.00069336814340204,
+        "D054": 0.0002618595608510077,
+        "D073": 0.00016238160606008023,
+        "D074": 0.0022700054105371237,
+        "D077": 3.7285459256963804e-05,
+        "D078": 0.00012142801278969273
+      },
+      "adjusted_relevance": {
+        "D005": 3.7288835301296785e-05,
+        "D019": 0.00013245460286270827,
+        "D024": 3.732569530257024e-05,
+        "D038": 3.7311212508939207e-05,
+        "D041": 3.729395757545717e-05,
+        "D042": 3.758411548915319e-05,
+        "D050": 3.7329289625631645e-05,
+        "D053": 0.00069336814340204,
+        "D054": 0.0002618595608510077,
+        "D073": 0.036435348449595034,
+        "D074": 0.0022700054105371237,
+        "D077": 3.7285459256963804e-05,
+        "D078": 0.00012142801278969273
+      }
+    },
+    {
+      "query_id": "Q02",
+      "query_type": "arbitration_pair",
+      "pair_group": "P1",
+      "dilemma_text": "Three villages share a ferry landing. Their representatives meet Friday to agree a temporary access plan. A clerk can reserve the only accessible berth without deciding the plan. The reservation expires in ten minutes. What comes first?",
+      "gold_primary_id": "D010",
+      "gold_competing_id": "D001",
+      "deciding_variable": "Time remaining to preserve the berth",
+      "distractor_ids": [
+        "D019",
+        "D013"
+      ],
+      "expected_guidance_summary": "Have the clerk reserve the berth now, then seek agreement about its use.",
+      "seeds": [
+        "D042",
+        "D010",
+        "D054",
+        "D019",
+        "D078"
+      ],
+      "pool": [
+        "D001",
+        "D005",
+        "D010",
+        "D013",
+        "D019",
+        "D024",
+        "D038",
+        "D041",
+        "D042",
+        "D050",
+        "D053",
+        "D054",
+        "D074",
+        "D077",
+        "D078"
+      ],
+      "primary": "D054",
+      "top3": [
+        "D054",
+        "D074",
+        "D053"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.19762638031673135,
+      "base_relevance": {
+        "D001": 9.676552144810557e-05,
+        "D005": 3.7287096347426996e-05,
+        "D010": 0.0001044579767039977,
+        "D013": 3.7306763260858133e-05,
+        "D019": 0.00013189601304475218,
+        "D024": 3.735593054443598e-05,
+        "D038": 3.730555545189418e-05,
+        "D041": 3.728528099600226e-05,
+        "D042": 3.747306618606672e-05,
+        "D050": 3.8750764360884205e-05,
+        "D053": 0.0006645150715485215,
+        "D054": 0.0002697269374039024,
+        "D074": 0.0011954443762078881,
+        "D077": 3.728652518475428e-05,
+        "D078": 0.00021812763588968664
+      },
+      "adjusted_relevance": {
+        "D001": 9.676552144810557e-05,
+        "D005": 3.7287096347426996e-05,
+        "D010": 0.0001044579767039977,
+        "D013": 3.7306763260858133e-05,
+        "D019": 0.00013189601304475218,
+        "D024": 3.735593054443598e-05,
+        "D038": 3.730555545189418e-05,
+        "D041": 3.728528099600226e-05,
+        "D042": 3.747306618606672e-05,
+        "D050": 3.8750764360884205e-05,
+        "D053": 0.0006645150715485215,
+        "D054": 0.020710991299711167,
+        "D074": 0.0011954443762078881,
+        "D077": 3.728652518475428e-05,
+        "D078": 0.00021812763588968664
+      }
+    },
+    {
+      "query_id": "Q03",
+      "query_type": "arbitration_pair",
+      "pair_group": "P2",
+      "dilemma_text": "Two museums share a director. One asks whether to copy the other’s practice of photographing objects on arrival. The receiving museum has the same written authority for intake photography. What should its director do?",
+      "gold_primary_id": "D007",
+      "gold_competing_id": "D023",
+      "deciding_variable": "Scope of delegated authority",
+      "distractor_ids": [
+        "D018",
+        "D029"
+      ],
+      "expected_guidance_summary": "Model the authorized documentation practice so staff can copy it consistently.",
+      "seeds": [
+        "D007",
+        "D079",
+        "D044",
+        "D045",
+        "D046"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D023",
+        "D043",
+        "D044",
+        "D045",
+        "D046",
+        "D047",
+        "D048",
+        "D079",
+        "D080",
+        "D081"
+      ],
+      "primary": "D007",
+      "top3": [
+        "D007",
+        "D081",
+        "D023"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.13457595412163995,
+      "base_relevance": {
+        "D007": 0.025791015475988388,
+        "D018": 0.0003334125503897667,
+        "D023": 0.0006530663813464344,
+        "D043": 0.0004650148912332952,
+        "D044": 3.750660107471049e-05,
+        "D045": 0.0002840092347469181,
+        "D046": 0.00013616988144349307,
+        "D047": 3.7323417927837e-05,
+        "D048": 3.755696161533706e-05,
+        "D079": 0.00017393277084920555,
+        "D080": 0.0001191873598145321,
+        "D081": 0.000993951689451933
+      },
+      "adjusted_relevance": {
+        "D007": 0.1289270337396374,
+        "D018": 0.0003334125503897667,
+        "D023": 0.0006530663813464344,
+        "D043": 0.0004650148912332952,
+        "D044": 3.750660107471049e-05,
+        "D045": 0.0002840092347469181,
+        "D046": 0.00013616988144349307,
+        "D047": 3.7323417927837e-05,
+        "D048": 3.755696161533706e-05,
+        "D079": 0.00017393277084920555,
+        "D080": 0.0001191873598145321,
+        "D081": 0.000993951689451933
+      }
+    },
+    {
+      "query_id": "Q04",
+      "query_type": "arbitration_pair",
+      "pair_group": "P2",
+      "dilemma_text": "Two museums share a director. One asks whether to copy the other’s practice of photographing objects on arrival. The receiving museum has no delegated authority for intake photography. What should its director do?",
+      "gold_primary_id": "D023",
+      "gold_competing_id": "D007",
+      "deciding_variable": "Scope of delegated authority",
+      "distractor_ids": [
+        "D018",
+        "D029"
+      ],
+      "expected_guidance_summary": "Stay within the receiving museum’s mandate. Obtain authority or design a permitted intake procedure.",
+      "seeds": [
+        "D007",
+        "D084",
+        "D094",
+        "D079",
+        "D044"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D023",
+        "D043",
+        "D044",
+        "D048",
+        "D079",
+        "D080",
+        "D081",
+        "D083",
+        "D084",
+        "D093",
+        "D094",
+        "D095"
+      ],
+      "primary": "D007",
+      "top3": [
+        "D007",
+        "D084",
+        "D081"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.12020457063122167,
+      "base_relevance": {
+        "D007": 0.02338157407939434,
+        "D018": 0.0001124248665291816,
+        "D023": 0.0005533197545446455,
+        "D043": 0.00045684733777306974,
+        "D044": 3.740522879525088e-05,
+        "D048": 3.746595393749885e-05,
+        "D079": 0.00016773477545939386,
+        "D080": 0.00010386668873252347,
+        "D081": 0.0009300688398070633,
+        "D083": 5.319024421623908e-05,
+        "D084": 0.0009718932560645044,
+        "D093": 0.00010778920113807544,
+        "D094": 0.00011916963558178395,
+        "D095": 5.304552905727178e-05
+      },
+      "adjusted_relevance": {
+        "D007": 0.02338157407939434,
+        "D018": 0.0001124248665291816,
+        "D023": 0.0005533197545446455,
+        "D043": 0.00045684733777306974,
+        "D044": 3.740522879525088e-05,
+        "D048": 3.746595393749885e-05,
+        "D079": 0.00016773477545939386,
+        "D080": 0.00010386668873252347,
+        "D081": 0.0009300688398070633,
+        "D083": 5.319024421623908e-05,
+        "D084": 0.0009718932560645044,
+        "D093": 0.00010778920113807544,
+        "D094": 0.00011916963558178395,
+        "D095": 5.304552905727178e-05
+      }
+    },
+    {
+      "query_id": "Q05",
+      "query_type": "arbitration_pair",
+      "pair_group": "P3",
+      "dilemma_text": "A seed bank holds a pouch requested for a school garden. The school can use the whole pouch, and a research group has an equal claim next season. The curator learns the variety is already replenished in a verified reserve. Should the bank distribute the pouch?",
+      "gold_primary_id": "D015",
+      "gold_competing_id": "D017",
+      "deciding_variable": "Availability of replacement stock before the other claim falls due",
+      "distractor_ids": [
+        "D002",
+        "D033"
+      ],
+      "expected_guidance_summary": "Release the available surplus while preserving the research allocation.",
+      "seeds": [
+        "D105",
+        "D106",
+        "D074",
+        "D073",
+        "D103"
+      ],
+      "pool": [
+        "D073",
+        "D074",
+        "D075",
+        "D078",
+        "D103",
+        "D104",
+        "D105",
+        "D106",
+        "D107"
+      ],
+      "primary": "D074",
+      "top3": [
+        "D074",
+        "D103",
+        "D106"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.15293275049570373,
+      "base_relevance": {
+        "D073": 0.000614347227383405,
+        "D074": 0.005536448210477829,
+        "D075": 3.752273551071994e-05,
+        "D078": 0.0006881068111397326,
+        "D103": 0.0012340800603851676,
+        "D104": 3.7366367905633524e-05,
+        "D105": 0.00025568518321961164,
+        "D106": 0.000708279199898243,
+        "D107": 3.729118543560617e-05
+      },
+      "adjusted_relevance": {
+        "D073": 0.000614347227383405,
+        "D074": 0.005536448210477829,
+        "D075": 3.752273551071994e-05,
+        "D078": 0.0006881068111397326,
+        "D103": 0.0012340800603851676,
+        "D104": 3.7366367905633524e-05,
+        "D105": 0.00025568518321961164,
+        "D106": 0.000708279199898243,
+        "D107": 3.729118543560617e-05
+      }
+    },
+    {
+      "query_id": "Q06",
+      "query_type": "arbitration_pair",
+      "pair_group": "P3",
+      "dilemma_text": "A seed bank holds a pouch requested for a school garden. The school can use the whole pouch, and a research group has an equal claim next season. The curator learns the variety is irreplaceable before next season. Should the bank distribute the pouch?",
+      "gold_primary_id": "D017",
+      "gold_competing_id": "D015",
+      "deciding_variable": "Availability of replacement stock before the other claim falls due",
+      "distractor_ids": [
+        "D002",
+        "D033"
+      ],
+      "expected_guidance_summary": "Reserve enough for the competing claim and agree the minimum allocation before seeds are sown.",
+      "seeds": [
+        "D073",
+        "D088",
+        "D105",
+        "D106",
+        "D103"
+      ],
+      "pool": [
+        "D073",
+        "D074",
+        "D075",
+        "D087",
+        "D088",
+        "D089",
+        "D103",
+        "D104",
+        "D105",
+        "D106",
+        "D107"
+      ],
+      "primary": "D074",
+      "top3": [
+        "D074",
+        "D103",
+        "D073"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.1365802780967515,
+      "base_relevance": {
+        "D073": 0.00018593105778563768,
+        "D074": 0.0004665829474106431,
+        "D075": 3.747467417269945e-05,
+        "D087": 3.73111070075538e-05,
+        "D088": 3.7762925785500556e-05,
+        "D089": 3.742638727999292e-05,
+        "D103": 0.00018932780949398875,
+        "D104": 3.833776281680912e-05,
+        "D105": 3.729029413079843e-05,
+        "D106": 3.7864363548578694e-05,
+        "D107": 3.73049515474122e-05
+      },
+      "adjusted_relevance": {
+        "D073": 0.00018593105778563768,
+        "D074": 0.0004665829474106431,
+        "D075": 3.747467417269945e-05,
+        "D087": 3.73111070075538e-05,
+        "D088": 3.7762925785500556e-05,
+        "D089": 3.742638727999292e-05,
+        "D103": 0.00018932780949398875,
+        "D104": 3.833776281680912e-05,
+        "D105": 3.729029413079843e-05,
+        "D106": 3.7864363548578694e-05,
+        "D107": 3.73049515474122e-05
+      }
+    },
+    {
+      "query_id": "Q07",
+      "query_type": "arbitration_pair",
+      "pair_group": "P4",
+      "dilemma_text": "A captioner keeps missing delivery targets. File access and skill have been checked. A timed trial shows the commissioned workload takes two hours of a four-hour shift. What should the captioner and editor examine first?",
+      "gold_primary_id": "D025",
+      "gold_competing_id": "D026",
+      "deciding_variable": "Measured workload relative to actual capacity",
+      "distractor_ids": [
+        "D012",
+        "D030"
+      ],
+      "expected_guidance_summary": "Audit the controllable workflow, such as how work enters the queue or reaches delivery. Test a single default.",
+      "seeds": [
+        "D035",
+        "D036",
+        "D103",
+        "D026",
+        "D068"
+      ],
+      "pool": [
+        "D023",
+        "D025",
+        "D026",
+        "D028",
+        "D034",
+        "D035",
+        "D036",
+        "D067",
+        "D068",
+        "D072",
+        "D103",
+        "D104",
+        "D105"
+      ],
+      "primary": "D026",
+      "top3": [
+        "D026",
+        "D036",
+        "D025"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.21759922404263704,
+      "base_relevance": {
+        "D023": 9.398551628692076e-05,
+        "D025": 0.008908200077712536,
+        "D026": 0.014943540096282959,
+        "D028": 0.00017789145931601524,
+        "D034": 4.0269231249112636e-05,
+        "D035": 4.831089245271869e-05,
+        "D036": 0.0001925162214320153,
+        "D067": 0.00034764708834700286,
+        "D068": 0.00029844860546290874,
+        "D072": 0.000110083376057446,
+        "D103": 0.00039502218714915216,
+        "D104": 0.00018711962911766022,
+        "D105": 7.162239489844069e-05
+      },
+      "adjusted_relevance": {
+        "D023": 9.398551628692076e-05,
+        "D025": 0.008908200077712536,
+        "D026": 0.1570025598630309,
+        "D028": 0.00017789145931601524,
+        "D034": 4.0269231249112636e-05,
+        "D035": 4.831089245271869e-05,
+        "D036": 0.07178117747807845,
+        "D067": 0.00034764708834700286,
+        "D068": 0.00029844860546290874,
+        "D072": 0.000110083376057446,
+        "D103": 0.00039502218714915216,
+        "D104": 0.00018711962911766022,
+        "D105": 7.162239489844069e-05
+      }
+    },
+    {
+      "query_id": "Q08",
+      "query_type": "arbitration_pair",
+      "pair_group": "P4",
+      "dilemma_text": "A captioner keeps missing delivery targets. File access and skill have been checked. A timed trial shows the commissioned workload takes six hours of a four-hour shift. What should the captioner and editor examine first?",
+      "gold_primary_id": "D026",
+      "gold_competing_id": "D025",
+      "deciding_variable": "Measured workload relative to actual capacity",
+      "distractor_ids": [
+        "D012",
+        "D030"
+      ],
+      "expected_guidance_summary": "Renegotiate scope or staffing. The commissioned workload itself exceeds capacity.",
+      "seeds": [
+        "D035",
+        "D036",
+        "D103",
+        "D026",
+        "D068"
+      ],
+      "pool": [
+        "D023",
+        "D025",
+        "D026",
+        "D028",
+        "D034",
+        "D035",
+        "D036",
+        "D067",
+        "D068",
+        "D072",
+        "D103",
+        "D104",
+        "D105"
+      ],
+      "primary": "D026",
+      "top3": [
+        "D026",
+        "D036",
+        "D025"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.22269752445556337,
+      "base_relevance": {
+        "D023": 9.587313252268359e-05,
+        "D025": 0.008983021602034569,
+        "D026": 0.015234687365591526,
+        "D028": 0.00019484900985844433,
+        "D034": 4.023177098133601e-05,
+        "D035": 4.786095814779401e-05,
+        "D036": 0.00019995398179162294,
+        "D067": 0.0003655365144368261,
+        "D068": 0.0003182515793014318,
+        "D072": 0.00011740018817363307,
+        "D103": 0.00042259125621058047,
+        "D104": 0.00021219628979451954,
+        "D105": 7.329390064114705e-05
+      },
+      "adjusted_relevance": {
+        "D023": 9.587313252268359e-05,
+        "D025": 0.008983021602034569,
+        "D026": 0.17468994949012995,
+        "D028": 0.00019484900985844433,
+        "D034": 4.023177098133601e-05,
+        "D035": 4.786095814779401e-05,
+        "D036": 0.07133843897690895,
+        "D067": 0.0003655365144368261,
+        "D068": 0.0003182515793014318,
+        "D072": 0.00011740018817363307,
+        "D103": 0.00042259125621058047,
+        "D104": 0.00021219628979451954,
+        "D105": 7.329390064114705e-05
+      }
+    },
+    {
+      "query_id": "Q09",
+      "query_type": "arbitration_pair",
+      "pair_group": "P5",
+      "dilemma_text": "A planetarium has a short booking for a guest projectionist. The show and equipment are ready for a test. The only unresolved question is whether the guest follows handover procedures under pressure. What evidence should the producer obtain first?",
+      "gold_primary_id": "D035",
+      "gold_competing_id": "D036",
+      "deciding_variable": "Object of the remaining uncertainty",
+      "distractor_ids": [
+        "D009",
+        "D032"
+      ],
+      "expected_guidance_summary": "Use a disclosed trial or comparable handover history to assess the delegate fairly.",
+      "seeds": [
+        "D057",
+        "D037",
+        "D035",
+        "D068",
+        "D100"
+      ],
+      "pool": [
+        "D023",
+        "D035",
+        "D036",
+        "D037",
+        "D038",
+        "D039",
+        "D055",
+        "D057",
+        "D058",
+        "D067",
+        "D068",
+        "D072",
+        "D099",
+        "D100",
+        "D101"
+      ],
+      "primary": "D035",
+      "top3": [
+        "D035",
+        "D039",
+        "D036"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.1669680419080362,
+      "base_relevance": {
+        "D023": 0.0004727178602479398,
+        "D035": 0.0007159757660701871,
+        "D036": 0.0022148117423057556,
+        "D037": 0.0008523294236510992,
+        "D038": 0.0004590205498971045,
+        "D039": 0.0033801253885030746,
+        "D055": 0.001102142734453082,
+        "D057": 0.0006252751336432993,
+        "D058": 0.0020724355708807707,
+        "D067": 0.0012508269865065813,
+        "D068": 0.0011961881536990404,
+        "D072": 0.00012672881712205708,
+        "D099": 3.9499951526522636e-05,
+        "D100": 0.0008266001241281629,
+        "D101": 3.731541073648259e-05
+      },
+      "adjusted_relevance": {
+        "D023": 0.0004727178602479398,
+        "D035": 0.10290012576006119,
+        "D036": 0.0022148117423057556,
+        "D037": 0.0008523294236510992,
+        "D038": 0.0004590205498971045,
+        "D039": 0.0033801253885030746,
+        "D055": 0.001102142734453082,
+        "D057": 0.0006252751336432993,
+        "D058": 0.0020724355708807707,
+        "D067": 0.0012508269865065813,
+        "D068": 0.0011961881536990404,
+        "D072": 0.00012672881712205708,
+        "D099": 3.9499951526522636e-05,
+        "D100": 0.0008266001241281629,
+        "D101": 3.731541073648259e-05
+      }
+    },
+    {
+      "query_id": "Q10",
+      "query_type": "arbitration_pair",
+      "pair_group": "P5",
+      "dilemma_text": "A planetarium has a short booking for a guest projectionist. The show and equipment are ready for a test. The only unresolved question is whether daylight at the chosen hour allows sufficient contrast. What evidence should the producer obtain first?",
+      "gold_primary_id": "D036",
+      "gold_competing_id": "D035",
+      "deciding_variable": "Object of the remaining uncertainty",
+      "distractor_ids": [
+        "D009",
+        "D032"
+      ],
+      "expected_guidance_summary": "Measure contrast in the dome at the booked hour, then commit focused effort if the setup passes.",
+      "seeds": [
+        "D057",
+        "D036",
+        "D069",
+        "D068",
+        "D037"
+      ],
+      "pool": [
+        "D034",
+        "D035",
+        "D036",
+        "D037",
+        "D038",
+        "D039",
+        "D055",
+        "D057",
+        "D058",
+        "D067",
+        "D068",
+        "D069",
+        "D070",
+        "D072"
+      ],
+      "primary": "D036",
+      "top3": [
+        "D036",
+        "D039",
+        "D055"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.39861975330258614,
+      "base_relevance": {
+        "D034": 3.729901072802022e-05,
+        "D035": 0.0001240391720784828,
+        "D036": 0.005044322460889816,
+        "D037": 0.00037285269354470074,
+        "D038": 0.0003982495400123298,
+        "D039": 0.0019517999608069658,
+        "D055": 0.0006978904129937291,
+        "D057": 0.00014452725008595735,
+        "D058": 0.0002961450954899192,
+        "D067": 0.0003329761093482375,
+        "D068": 0.0005917137023061514,
+        "D069": 3.7853966205148026e-05,
+        "D070": 4.585796341416426e-05,
+        "D072": 4.72590618301183e-05
+      },
+      "adjusted_relevance": {
+        "D034": 3.729901072802022e-05,
+        "D035": 0.0001240391720784828,
+        "D036": 0.08387663594148762,
+        "D037": 0.00037285269354470074,
+        "D038": 0.0003982495400123298,
+        "D039": 0.0019517999608069658,
+        "D055": 0.0006978904129937291,
+        "D057": 0.00014452725008595735,
+        "D058": 0.0002961450954899192,
+        "D067": 0.0003329761093482375,
+        "D068": 0.0005917137023061514,
+        "D069": 3.7853966205148026e-05,
+        "D070": 4.585796341416426e-05,
+        "D072": 4.72590618301183e-05
+      }
+    },
+    {
+      "query_id": "Q11",
+      "query_type": "arbitration_pair",
+      "pair_group": "P6",
+      "dilemma_text": "An illustrator has repeatedly spent the paper budget on entries for the same uncertain prize. Today’s remaining paper is reserved for a client. This particular poster does not satisfy the client’s commissioned deliverable. Should the illustrator use the paper?",
+      "gold_primary_id": "D003",
+      "gold_competing_id": "D006",
+      "deciding_variable": "Whether the work discharges an independent existing obligation",
+      "distractor_ids": [
+        "D014",
+        "D022"
+      ],
+      "expected_guidance_summary": "Protect the materials and complete the overdue work before staking additional resources on a prize.",
+      "seeds": [
+        "D003",
+        "D103",
+        "D044",
+        "D033",
+        "D002"
+      ],
+      "pool": [
+        "D002",
+        "D003",
+        "D006",
+        "D011",
+        "D014",
+        "D032",
+        "D033",
+        "D043",
+        "D044",
+        "D048",
+        "D103",
+        "D104",
+        "D105"
+      ],
+      "primary": "D003",
+      "top3": [
+        "D003",
+        "D006",
+        "D103"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.07989203152806097,
+      "base_relevance": {
+        "D002": 3.895023473887704e-05,
+        "D003": 0.49779197573661804,
+        "D006": 0.20258259773254395,
+        "D011": 3.728901720023714e-05,
+        "D014": 3.853143425658345e-05,
+        "D032": 4.577660729410127e-05,
+        "D033": 5.379714275477454e-05,
+        "D043": 4.8536938265897334e-05,
+        "D044": 3.731494871317409e-05,
+        "D048": 3.732405821210705e-05,
+        "D103": 0.000238393695326522,
+        "D104": 0.00017566431779414415,
+        "D105": 3.736722283065319e-05
+      },
+      "adjusted_relevance": {
+        "D002": 3.895023473887704e-05,
+        "D003": 0.746212794771418,
+        "D006": 0.20258259773254395,
+        "D011": 3.728901720023714e-05,
+        "D014": 3.853143425658345e-05,
+        "D032": 4.577660729410127e-05,
+        "D033": 5.379714275477454e-05,
+        "D043": 4.8536938265897334e-05,
+        "D044": 3.731494871317409e-05,
+        "D048": 3.732405821210705e-05,
+        "D103": 0.000238393695326522,
+        "D104": 0.00017566431779414415,
+        "D105": 3.736722283065319e-05
+      }
+    },
+    {
+      "query_id": "Q12",
+      "query_type": "arbitration_pair",
+      "pair_group": "P6",
+      "dilemma_text": "An illustrator has repeatedly spent the paper budget on entries for the same uncertain prize. Today’s remaining paper is reserved for a client. This particular poster fully satisfies the client’s commissioned deliverable. Should the illustrator use the paper?",
+      "gold_primary_id": "D006",
+      "gold_competing_id": "D003",
+      "deciding_variable": "Whether the work discharges an independent existing obligation",
+      "distractor_ids": [
+        "D014",
+        "D022"
+      ],
+      "expected_guidance_summary": "Complete the authorized client deliverable and judge execution by its quality and deadline.",
+      "seeds": [
+        "D003",
+        "D103",
+        "D044",
+        "D033",
+        "D106"
+      ],
+      "pool": [
+        "D003",
+        "D006",
+        "D014",
+        "D032",
+        "D033",
+        "D043",
+        "D044",
+        "D048",
+        "D103",
+        "D104",
+        "D105",
+        "D106",
+        "D107"
+      ],
+      "primary": "D006",
+      "top3": [
+        "D006",
+        "D003",
+        "D104"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.08855546859046658,
+      "base_relevance": {
+        "D003": 0.13680636882781982,
+        "D006": 0.08145727962255478,
+        "D014": 4.3660988012561575e-05,
+        "D032": 7.157262007240206e-05,
+        "D033": 7.85763913881965e-05,
+        "D043": 0.00017574189405422658,
+        "D044": 3.735617792699486e-05,
+        "D048": 3.7323985452530906e-05,
+        "D103": 0.0002198586007580161,
+        "D104": 0.00031909497920423746,
+        "D105": 4.101623926544562e-05,
+        "D106": 4.300276850699447e-05,
+        "D107": 3.731445031007752e-05
+      },
+      "adjusted_relevance": {
+        "D003": 0.13680636882781982,
+        "D006": 0.3205154951661825,
+        "D014": 4.3660988012561575e-05,
+        "D032": 7.157262007240206e-05,
+        "D033": 7.85763913881965e-05,
+        "D043": 0.00017574189405422658,
+        "D044": 3.735617792699486e-05,
+        "D048": 3.7323985452530906e-05,
+        "D103": 0.0002198586007580161,
+        "D104": 0.00031909497920423746,
+        "D105": 4.101623926544562e-05,
+        "D106": 4.300276850699447e-05,
+        "D107": 3.731445031007752e-05
+      }
+    },
+    {
+      "query_id": "Q13",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A small captioning service wants an exclusive regional broadcaster agreement. Its cash forecast looks fine, but overnight staffing and backup transmission have never been verified. What should the partners establish before replying, and what if the gaps persist?",
+      "gold_primary_id": "D030",
+      "gold_competing_id": "D031",
+      "deciding_variable": "Internal readiness before external posture",
+      "distractor_ids": [
+        "D009",
+        "D033"
+      ],
+      "expected_guidance_summary": "Audit workforce, reserves, infrastructure, customers and partners. Use that evidence to compare waiting or seeking backing before accepting exclusivity.",
+      "seeds": [
+        "D078",
+        "D031",
+        "D102",
+        "D030",
+        "D035"
+      ],
+      "pool": [
+        "D018",
+        "D023",
+        "D030",
+        "D031",
+        "D035",
+        "D036",
+        "D074",
+        "D077",
+        "D078",
+        "D098",
+        "D101",
+        "D102"
+      ],
+      "primary": "D102",
+      "top3": [
+        "D102",
+        "D031",
+        "D077"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.13989232122188594,
+      "base_relevance": {
+        "D018": 7.734440441709012e-05,
+        "D023": 6.359019607771188e-05,
+        "D030": 0.00029522101976908743,
+        "D031": 0.0004583570407703519,
+        "D035": 0.00036080717109143734,
+        "D036": 0.00013847627269569784,
+        "D074": 3.7289337342372164e-05,
+        "D077": 0.0004232401552144438,
+        "D078": 7.52300547901541e-05,
+        "D098": 7.771598757244647e-05,
+        "D101": 3.8547754229512066e-05,
+        "D102": 8.596260886406526e-05
+      },
+      "adjusted_relevance": {
+        "D018": 7.734440441709012e-05,
+        "D023": 6.359019607771188e-05,
+        "D030": 0.00029522101976908743,
+        "D031": 0.0004583570407703519,
+        "D035": 0.00036080717109143734,
+        "D036": 0.00013847627269569784,
+        "D074": 3.7289337342372164e-05,
+        "D077": 0.0004232401552144438,
+        "D078": 7.52300547901541e-05,
+        "D098": 7.771598757244647e-05,
+        "D101": 3.8547754229512066e-05,
+        "D102": 0.021297930214132066
+      }
+    },
+    {
+      "query_id": "Q14",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A heritage festival has one final bronze casting. Two committees gave different inscriptions, and only one has documentation for the contested name. How should the foundry settle the factual question and authorize the cast?",
+      "gold_primary_id": "D016",
+      "gold_competing_id": "D029",
+      "deciding_variable": "Verified evidence followed by unambiguous production authority",
+      "distractor_ids": [
+        "D001",
+        "D027"
+      ],
+      "expected_guidance_summary": "Check the underlying record and disclose uncertainty. Put the verified spelling and approving authority on one final proof.",
+      "seeds": [
+        "D029",
+        "D102",
+        "D041",
+        "D016",
+        "D037"
+      ],
+      "pool": [
+        "D013",
+        "D016",
+        "D029",
+        "D034",
+        "D037",
+        "D038",
+        "D039",
+        "D040",
+        "D041",
+        "D042",
+        "D098",
+        "D101",
+        "D102"
+      ],
+      "primary": "D034",
+      "top3": [
+        "D034",
+        "D016",
+        "D029"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.2800661748323062,
+      "base_relevance": {
+        "D013": 3.7290188629413024e-05,
+        "D016": 0.006566214840859175,
+        "D029": 0.0007232449715957046,
+        "D034": 0.0019508101977407932,
+        "D037": 3.7397203414002433e-05,
+        "D038": 3.778947575483471e-05,
+        "D039": 3.771330011659302e-05,
+        "D040": 0.00027557663270272315,
+        "D041": 3.741921318578534e-05,
+        "D042": 3.737167571671307e-05,
+        "D098": 3.728944284375757e-05,
+        "D101": 4.606392030837014e-05,
+        "D102": 3.730078606167808e-05
+      },
+      "adjusted_relevance": {
+        "D013": 3.7290188629413024e-05,
+        "D016": 0.006566214840859175,
+        "D029": 0.0007232449715957046,
+        "D034": 0.020472888228323424,
+        "D037": 3.7397203414002433e-05,
+        "D038": 3.778947575483471e-05,
+        "D039": 3.771330011659302e-05,
+        "D040": 0.00027557663270272315,
+        "D041": 3.741921318578534e-05,
+        "D042": 3.737167571671307e-05,
+        "D098": 3.728944284375757e-05,
+        "D101": 4.606392030837014e-05,
+        "D102": 3.730078606167808e-05
+      }
+    },
+    {
+      "query_id": "Q15",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A food cooperative averages all packing times and declares a new collection scheme a success. Members who select the translated form report much longer waits. How should the committee examine both claims?",
+      "gold_primary_id": "D024",
+      "gold_competing_id": "D019",
+      "deciding_variable": "System-level linkage followed by subgroup access analysis",
+      "distractor_ids": [
+        "D005",
+        "D011"
+      ],
+      "expected_guidance_summary": "Link order, packing and collection records for the same baskets. Compare waiting times by form language and check whether different users can access equivalent service.",
+      "seeds": [
+        "D019",
+        "D068",
+        "D105",
+        "D070",
+        "D057"
+      ],
+      "pool": [
+        "D005",
+        "D019",
+        "D024",
+        "D055",
+        "D057",
+        "D058",
+        "D067",
+        "D068",
+        "D069",
+        "D070",
+        "D071",
+        "D072",
+        "D103",
+        "D105",
+        "D106"
+      ],
+      "primary": "D068",
+      "top3": [
+        "D068",
+        "D103",
+        "D070"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.13913634286804769,
+      "base_relevance": {
+        "D005": 7.846273365430534e-05,
+        "D019": 4.6385401219595224e-05,
+        "D024": 0.00018424936570227146,
+        "D055": 0.00011518242536112666,
+        "D057": 0.00013947559637017548,
+        "D058": 3.785125954891555e-05,
+        "D067": 0.00017535120423417538,
+        "D068": 0.000574330857489258,
+        "D069": 0.00028900790493935347,
+        "D070": 0.000440768402768299,
+        "D071": 3.733559060492553e-05,
+        "D072": 3.883610770571977e-05,
+        "D103": 0.000498650420922786,
+        "D105": 4.975765114068054e-05,
+        "D106": 3.731704782694578e-05
+      },
+      "adjusted_relevance": {
+        "D005": 7.846273365430534e-05,
+        "D019": 4.6385401219595224e-05,
+        "D024": 0.00018424936570227146,
+        "D055": 0.00011518242536112666,
+        "D057": 0.00013947559637017548,
+        "D058": 3.785125954891555e-05,
+        "D067": 0.00017535120423417538,
+        "D068": 0.000574330857489258,
+        "D069": 0.00028900790493935347,
+        "D070": 0.000440768402768299,
+        "D071": 3.733559060492553e-05,
+        "D072": 3.883610770571977e-05,
+        "D103": 0.000498650420922786,
+        "D105": 4.975765114068054e-05,
+        "D106": 3.731704782694578e-05
+      }
+    },
+    {
+      "query_id": "Q16",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A dance troupe can buy an extra rehearsal in a touring venue. A short call with the venue could establish whether the installed floor is usable. If it is unusable, the deposit is lost and the troupe forfeits its last available rehearsal elsewhere. What sequence makes sense?",
+      "gold_primary_id": "D032",
+      "gold_competing_id": "D033",
+      "deciding_variable": "Low-cost information precedes a depletion decision",
+      "distractor_ids": [
+        "D021",
+        "D036"
+      ],
+      "expected_guidance_summary": "Confirm floor suitability, access and crew capacity. Then compare prospective gain against the deposit and displaced rehearsal before paying.",
+      "seeds": [
+        "D033",
+        "D032",
+        "D098",
+        "D054",
+        "D082"
+      ],
+      "pool": [
+        "D009",
+        "D032",
+        "D033",
+        "D050",
+        "D053",
+        "D054",
+        "D081",
+        "D082",
+        "D083",
+        "D097",
+        "D098",
+        "D102"
+      ],
+      "primary": "D082",
+      "top3": [
+        "D082",
+        "D050",
+        "D033"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.11192053976531008,
+      "base_relevance": {
+        "D009": 3.7298366805771366e-05,
+        "D032": 3.7287947634467855e-05,
+        "D033": 4.649886614060961e-05,
+        "D050": 4.8923939175438136e-05,
+        "D053": 3.7289937608875334e-05,
+        "D054": 4.1410479752812535e-05,
+        "D081": 3.732114055310376e-05,
+        "D082": 8.439587691100314e-05,
+        "D083": 3.7289049942046404e-05,
+        "D097": 3.7311176129151136e-05,
+        "D098": 4.571879981085658e-05,
+        "D102": 4.155950591666624e-05
+      },
+      "adjusted_relevance": {
+        "D009": 3.7298366805771366e-05,
+        "D032": 3.7287947634467855e-05,
+        "D033": 4.649886614060961e-05,
+        "D050": 4.8923939175438136e-05,
+        "D053": 3.7289937608875334e-05,
+        "D054": 4.1410479752812535e-05,
+        "D081": 3.732114055310376e-05,
+        "D082": 8.439587691100314e-05,
+        "D083": 3.7289049942046404e-05,
+        "D097": 3.7311176129151136e-05,
+        "D098": 4.571879981085658e-05,
+        "D102": 4.155950591666624e-05
+      }
+    },
+    {
+      "query_id": "Q17",
+      "query_type": "abstention",
+      "pair_group": null,
+      "dilemma_text": "An unlabeled ceramic tile from an excavation has two possible clay sources. From the verse collection alone, which quarry supplied the tile?",
+      "gold_primary_id": null,
+      "gold_competing_id": null,
+      "deciding_variable": "Empirical provenance requires physical or archival evidence",
+      "distractor_ids": [
+        "D016",
+        "D024"
+      ],
+      "expected_guidance_summary": "Abstain from naming a quarry. Request comparative material analysis or traceable excavation records.",
+      "seeds": [
+        "D037",
+        "D044",
+        "D105",
+        "D074",
+        "D076"
+      ],
+      "pool": [
+        "D037",
+        "D038",
+        "D039",
+        "D043",
+        "D044",
+        "D048",
+        "D073",
+        "D074",
+        "D075",
+        "D076",
+        "D077",
+        "D078",
+        "D103",
+        "D105",
+        "D106"
+      ],
+      "primary": "Abstain",
+      "top3": [
+        "D106",
+        "D043",
+        "D073"
+      ],
+      "abstained": true,
+      "abstention_prob": 0.6823772214135809,
+      "base_relevance": {
+        "D037": 3.729872332769446e-05,
+        "D038": 3.729392483364791e-05,
+        "D039": 3.729715899680741e-05,
+        "D043": 0.00021485064644366503,
+        "D044": 3.729189484147355e-05,
+        "D048": 9.705338015919551e-05,
+        "D073": 0.00011933600035263225,
+        "D074": 3.88336629839614e-05,
+        "D075": 4.1080555092776194e-05,
+        "D076": 6.842247967142612e-05,
+        "D077": 3.728609954123385e-05,
+        "D078": 3.7299541872926056e-05,
+        "D103": 3.729210948222317e-05,
+        "D105": 3.7968249671394005e-05,
+        "D106": 0.00034763701842166483
+      },
+      "adjusted_relevance": {
+        "D037": 3.729872332769446e-05,
+        "D038": 3.729392483364791e-05,
+        "D039": 3.729715899680741e-05,
+        "D043": 0.00021485064644366503,
+        "D044": 3.729189484147355e-05,
+        "D048": 9.705338015919551e-05,
+        "D073": 0.00011933600035263225,
+        "D074": 3.88336629839614e-05,
+        "D075": 4.1080555092776194e-05,
+        "D076": 6.842247967142612e-05,
+        "D077": 3.728609954123385e-05,
+        "D078": 3.7299541872926056e-05,
+        "D103": 3.729210948222317e-05,
+        "D105": 3.7968249671394005e-05,
+        "D106": 0.00034763701842166483
+      }
+    },
+    {
+      "query_id": "Q18",
+      "query_type": "abstention",
+      "pair_group": null,
+      "dilemma_text": "My thermometer displays two different temperatures for the same sealed bath. Which number is the true temperature to one decimal place?",
+      "gold_primary_id": null,
+      "gold_competing_id": null,
+      "deciding_variable": "Numerical measurement requires calibration and reference observations",
+      "distractor_ids": [
+        "D013",
+        "D027"
+      ],
+      "expected_guidance_summary": "Abstain from estimating a temperature. A calibrated reference measurement and instrument checks are needed.",
+      "seeds": [
+        "D029",
+        "D019",
+        "D032",
+        "D075",
+        "D031"
+      ],
+      "pool": [
+        "D005",
+        "D009",
+        "D016",
+        "D018",
+        "D019",
+        "D024",
+        "D029",
+        "D030",
+        "D031",
+        "D032",
+        "D033",
+        "D034",
+        "D073",
+        "D075",
+        "D076"
+      ],
+      "primary": "Abstain",
+      "top3": [
+        "D018",
+        "D034",
+        "D030"
+      ],
+      "abstained": true,
+      "abstention_prob": 0.8140163023775486,
+      "base_relevance": {
+        "D005": 3.7364654417615384e-05,
+        "D009": 3.7445774069055915e-05,
+        "D016": 3.743638444575481e-05,
+        "D018": 3.7454203265951946e-05,
+        "D019": 3.74273513443768e-05,
+        "D024": 3.730391836143099e-05,
+        "D029": 3.744141577044502e-05,
+        "D030": 3.744741843547672e-05,
+        "D031": 3.7442809116328135e-05,
+        "D032": 3.737385122803971e-05,
+        "D033": 3.739470776054077e-05,
+        "D034": 3.7448200600920245e-05,
+        "D073": 3.737955557880923e-05,
+        "D075": 3.7299720133887604e-05,
+        "D076": 3.74400224245619e-05
+      },
+      "adjusted_relevance": {
+        "D005": 3.7364654417615384e-05,
+        "D009": 3.7445774069055915e-05,
+        "D016": 3.743638444575481e-05,
+        "D018": 3.7454203265951946e-05,
+        "D019": 3.74273513443768e-05,
+        "D024": 3.730391836143099e-05,
+        "D029": 3.744141577044502e-05,
+        "D030": 3.744741843547672e-05,
+        "D031": 3.7442809116328135e-05,
+        "D032": 3.737385122803971e-05,
+        "D033": 3.739470776054077e-05,
+        "D034": 3.7448200600920245e-05,
+        "D073": 3.737955557880923e-05,
+        "D075": 3.7299720133887604e-05,
+        "D076": 3.74400224245619e-05
+      }
+    },
+    {
+      "query_id": "Q19",
+      "query_type": "arbitration_pair",
+      "pair_group": "P7",
+      "dilemma_text": "A stamp society is reviewing a claim about a cataloguing error. Its only unresolved concern is that the evaluator owns the item whose value would rise. What should the society do first?",
+      "gold_primary_id": "D039",
+      "gold_competing_id": "D040",
+      "deciding_variable": "Location of the uncertainty",
+      "distractor_ids": [
+        "D037",
+        "D038"
+      ],
+      "expected_guidance_summary": "Separate the evaluator’s private stake from assessment and obtain an unconflicted reading.",
+      "seeds": [
+        "D039",
+        "D002",
+        "D074",
+        "D010",
+        "D058"
+      ],
+      "pool": [
+        "D001",
+        "D002",
+        "D010",
+        "D011",
+        "D013",
+        "D037",
+        "D039",
+        "D040",
+        "D057",
+        "D058",
+        "D059",
+        "D073",
+        "D074",
+        "D078"
+      ],
+      "primary": "D039",
+      "top3": [
+        "D039",
+        "D040",
+        "D010"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.19897632046600963,
+      "base_relevance": {
+        "D001": 0.00010424553329357877,
+        "D002": 0.00025816832203418016,
+        "D010": 0.00046876826672814786,
+        "D011": 3.7306836020434275e-05,
+        "D013": 7.374666165560484e-05,
+        "D037": 0.00017833455058280379,
+        "D039": 0.01111692190170288,
+        "D040": 0.001819408847950399,
+        "D057": 3.807343091466464e-05,
+        "D058": 5.0615071813808754e-05,
+        "D059": 3.7476995203178376e-05,
+        "D073": 0.00013853768177796155,
+        "D074": 4.80759990750812e-05,
+        "D078": 3.845339233521372e-05
+      },
+      "adjusted_relevance": {
+        "D001": 0.00010424553329357877,
+        "D002": 0.00025816832203418016,
+        "D010": 0.00046876826672814786,
+        "D011": 3.7306836020434275e-05,
+        "D013": 7.374666165560484e-05,
+        "D037": 0.00017833455058280379,
+        "D039": 0.01111692190170288,
+        "D040": 0.001819408847950399,
+        "D057": 3.807343091466464e-05,
+        "D058": 5.0615071813808754e-05,
+        "D059": 3.7476995203178376e-05,
+        "D073": 0.00013853768177796155,
+        "D074": 4.80759990750812e-05,
+        "D078": 3.845339233521372e-05
+      }
+    },
+    {
+      "query_id": "Q20",
+      "query_type": "arbitration_pair",
+      "pair_group": "P7",
+      "dilemma_text": "A stamp society is reviewing a claim about a cataloguing error. Its only unresolved concern is that three accounts of the error may come from one original observer. What should the society do first?",
+      "gold_primary_id": "D040",
+      "gold_competing_id": "D039",
+      "deciding_variable": "Location of the uncertainty",
+      "distractor_ids": [
+        "D037",
+        "D038"
+      ],
+      "expected_guidance_summary": "Trace the accounts to independent observations before relying on their agreement.",
+      "seeds": [
+        "D058",
+        "D037",
+        "D010",
+        "D064",
+        "D046"
+      ],
+      "pool": [
+        "D001",
+        "D010",
+        "D013",
+        "D037",
+        "D038",
+        "D039",
+        "D045",
+        "D046",
+        "D047",
+        "D057",
+        "D058",
+        "D059",
+        "D063",
+        "D064",
+        "D065"
+      ],
+      "primary": "D039",
+      "top3": [
+        "D039",
+        "D064",
+        "D045"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.23837649902091196,
+      "base_relevance": {
+        "D001": 0.000125299280625768,
+        "D010": 0.000637093442492187,
+        "D013": 0.00030388031154870987,
+        "D037": 0.00022172291937749833,
+        "D038": 3.758143066079356e-05,
+        "D039": 0.001956057036295533,
+        "D045": 0.00064476253464818,
+        "D046": 6.114660209277645e-05,
+        "D047": 9.91214401437901e-05,
+        "D057": 3.8131642213556916e-05,
+        "D058": 6.674051110167056e-05,
+        "D059": 4.818565139430575e-05,
+        "D063": 0.00037438227445818484,
+        "D064": 0.0006502399337477982,
+        "D065": 0.00012554779823403805
+      },
+      "adjusted_relevance": {
+        "D001": 0.000125299280625768,
+        "D010": 0.000637093442492187,
+        "D013": 0.00030388031154870987,
+        "D037": 0.00022172291937749833,
+        "D038": 3.758143066079356e-05,
+        "D039": 0.001956057036295533,
+        "D045": 0.00064476253464818,
+        "D046": 6.114660209277645e-05,
+        "D047": 9.91214401437901e-05,
+        "D057": 3.8131642213556916e-05,
+        "D058": 6.674051110167056e-05,
+        "D059": 4.818565139430575e-05,
+        "D063": 0.00037438227445818484,
+        "D064": 0.0006502399337477982,
+        "D065": 0.00012554779823403805
+      }
+    },
+    {
+      "query_id": "Q21",
+      "query_type": "arbitration_pair",
+      "pair_group": "P8",
+      "dilemma_text": "A caption archive has trained volunteers ready to process a collection. Access is available every week throughout the coming year. How should the coordinator schedule effort?",
+      "gold_primary_id": "D049",
+      "gold_competing_id": "D050",
+      "deciding_variable": "Duration and repeatability of access",
+      "distractor_ids": [
+        "D021",
+        "D054"
+      ],
+      "expected_guidance_summary": "Rotate the volunteers with predictable recovery across successive sessions.",
+      "seeds": [
+        "D018",
+        "D074",
+        "D035",
+        "D049",
+        "D070"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D023",
+        "D029",
+        "D035",
+        "D036",
+        "D049",
+        "D050",
+        "D051",
+        "D069",
+        "D070",
+        "D071",
+        "D073",
+        "D074",
+        "D078"
+      ],
+      "primary": "D050",
+      "top3": [
+        "D050",
+        "D036",
+        "D074"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.10281128761026344,
+      "base_relevance": {
+        "D007": 3.815201125689782e-05,
+        "D018": 3.7343852454796433e-05,
+        "D023": 3.7297766539268196e-05,
+        "D029": 3.729673335328698e-05,
+        "D035": 3.738975283340551e-05,
+        "D036": 0.00015092187095433474,
+        "D049": 9.699934889795259e-05,
+        "D050": 0.0001955426560016349,
+        "D051": 3.735425343620591e-05,
+        "D069": 4.2050502088386565e-05,
+        "D070": 3.803013896686025e-05,
+        "D071": 7.476533210137859e-05,
+        "D073": 0.00011210949014639482,
+        "D074": 0.00012562444317154586,
+        "D078": 3.728620504261926e-05
+      },
+      "adjusted_relevance": {
+        "D007": 3.815201125689782e-05,
+        "D018": 3.7343852454796433e-05,
+        "D023": 3.7297766539268196e-05,
+        "D029": 3.729673335328698e-05,
+        "D035": 3.738975283340551e-05,
+        "D036": 0.00015092187095433474,
+        "D049": 9.699934889795259e-05,
+        "D050": 0.0001955426560016349,
+        "D051": 3.735425343620591e-05,
+        "D069": 4.2050502088386565e-05,
+        "D070": 3.803013896686025e-05,
+        "D071": 7.476533210137859e-05,
+        "D073": 0.00011210949014639482,
+        "D074": 0.00012562444317154586,
+        "D078": 3.728620504261926e-05
+      }
+    },
+    {
+      "query_id": "Q22",
+      "query_type": "arbitration_pair",
+      "pair_group": "P8",
+      "dilemma_text": "A caption archive has trained volunteers ready to process a collection. Access is available only for one confirmed afternoon this year. How should the coordinator schedule effort?",
+      "gold_primary_id": "D050",
+      "gold_competing_id": "D049",
+      "deciding_variable": "Duration and repeatability of access",
+      "distractor_ids": [
+        "D021",
+        "D054"
+      ],
+      "expected_guidance_summary": "Assemble the rested volunteers for that one bounded opening with an explicit stopping time.",
+      "seeds": [
+        "D018",
+        "D036",
+        "D070",
+        "D049",
+        "D035"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D023",
+        "D029",
+        "D034",
+        "D035",
+        "D036",
+        "D049",
+        "D050",
+        "D051",
+        "D069",
+        "D070",
+        "D071"
+      ],
+      "primary": "D050",
+      "top3": [
+        "D050",
+        "D036",
+        "D071"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.1172907960692664,
+      "base_relevance": {
+        "D007": 3.89183041988872e-05,
+        "D018": 3.7442132452270016e-05,
+        "D023": 3.7300858821254224e-05,
+        "D029": 3.728808951564133e-05,
+        "D034": 3.731836477527395e-05,
+        "D035": 3.730619573616423e-05,
+        "D036": 0.0002025965804932639,
+        "D049": 6.398405821528286e-05,
+        "D050": 0.0002065246517304331,
+        "D051": 3.739777457667515e-05,
+        "D069": 4.356196222943254e-05,
+        "D070": 3.748471863218583e-05,
+        "D071": 7.051563443383202e-05
+      },
+      "adjusted_relevance": {
+        "D007": 3.89183041988872e-05,
+        "D018": 3.7442132452270016e-05,
+        "D023": 3.7300858821254224e-05,
+        "D029": 3.728808951564133e-05,
+        "D034": 3.731836477527395e-05,
+        "D035": 3.730619573616423e-05,
+        "D036": 0.0002025965804932639,
+        "D049": 6.398405821528286e-05,
+        "D050": 0.0002065246517304331,
+        "D051": 3.739777457667515e-05,
+        "D069": 4.356196222943254e-05,
+        "D070": 3.748471863218583e-05,
+        "D071": 7.051563443383202e-05
+      }
+    },
+    {
+      "query_id": "Q23",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A genealogical registry must explain a disputed change of name. Several family accounts seem to agree, but may repeat one letter. Patrons will rely on the final account. What two steps should the registrar take?",
+      "gold_primary_id": "D040",
+      "gold_competing_id": "D041",
+      "deciding_variable": "Independence before disclosure",
+      "distractor_ids": [
+        "D038",
+        "D042"
+      ],
+      "expected_guidance_summary": "Trace each account to its source and corroborate independently, then distinguish the established findings from the gaps in the public entry.",
+      "seeds": [
+        "D046",
+        "D040",
+        "D041",
+        "D058",
+        "D029"
+      ],
+      "pool": [
+        "D016",
+        "D029",
+        "D034",
+        "D039",
+        "D040",
+        "D041",
+        "D042",
+        "D045",
+        "D046",
+        "D047",
+        "D057",
+        "D058",
+        "D059"
+      ],
+      "primary": "D040",
+      "top3": [
+        "D040",
+        "D039",
+        "D046"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.1243635568980477,
+      "base_relevance": {
+        "D016": 7.023652142379433e-05,
+        "D029": 9.807153401197866e-05,
+        "D034": 3.739913154277019e-05,
+        "D039": 0.0020404981914907694,
+        "D040": 0.005372147541493177,
+        "D041": 5.305276135914028e-05,
+        "D042": 4.418535900185816e-05,
+        "D045": 0.00041248241905122995,
+        "D046": 0.00182766979560256,
+        "D047": 5.691486148862168e-05,
+        "D057": 3.752191332750954e-05,
+        "D058": 5.288652391755022e-05,
+        "D059": 3.729690797626972e-05
+      },
+      "adjusted_relevance": {
+        "D016": 7.023652142379433e-05,
+        "D029": 9.807153401197866e-05,
+        "D034": 3.739913154277019e-05,
+        "D039": 0.0020404981914907694,
+        "D040": 0.05866733025632129,
+        "D041": 5.305276135914028e-05,
+        "D042": 4.418535900185816e-05,
+        "D045": 0.00041248241905122995,
+        "D046": 0.00182766979560256,
+        "D047": 5.691486148862168e-05,
+        "D057": 3.752191332750954e-05,
+        "D058": 5.288652391755022e-05,
+        "D059": 3.729690797626972e-05
+      }
+    },
+    {
+      "query_id": "Q24",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "Night crews at a costume workshop have spent an entire season redoing seams. Errors rise late in each session. Separate trials also implicate the same worn fixture. How should the supervisor sequence a durable repair?",
+      "gold_primary_id": "D049",
+      "gold_competing_id": "D051",
+      "deciding_variable": "Restore working capacity before replacing the common cause",
+      "distractor_ids": [
+        "D047",
+        "D052"
+      ],
+      "expected_guidance_summary": "Provide a sustainable rotation first, then validate and remove the recurring fixture defect.",
+      "seeds": [
+        "D051",
+        "D021",
+        "D102",
+        "D018",
+        "D049"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D021",
+        "D027",
+        "D028",
+        "D029",
+        "D049",
+        "D050",
+        "D051",
+        "D052",
+        "D098",
+        "D101",
+        "D102"
+      ],
+      "primary": "D049",
+      "top3": [
+        "D049",
+        "D028",
+        "D050"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.13322245897088783,
+      "base_relevance": {
+        "D007": 5.855735798832029e-05,
+        "D018": 3.729491800186224e-05,
+        "D021": 3.730697790160775e-05,
+        "D027": 3.729193122126162e-05,
+        "D028": 0.0014743395149707794,
+        "D029": 3.7290188629413024e-05,
+        "D049": 0.00014246499631553888,
+        "D050": 0.00047220493433997035,
+        "D051": 0.00029826228274032474,
+        "D052": 8.659654122311622e-05,
+        "D098": 0.00023501231044065207,
+        "D101": 3.728762749233283e-05,
+        "D102": 3.728670344571583e-05
+      },
+      "adjusted_relevance": {
+        "D007": 5.855735798832029e-05,
+        "D018": 3.729491800186224e-05,
+        "D021": 3.730697790160775e-05,
+        "D027": 3.729193122126162e-05,
+        "D028": 0.0014743395149707794,
+        "D029": 3.7290188629413024e-05,
+        "D049": 0.04873340519297926,
+        "D050": 0.00047220493433997035,
+        "D051": 0.00029826228274032474,
+        "D052": 8.659654122311622e-05,
+        "D098": 0.00023501231044065207,
+        "D101": 3.728762749233283e-05,
+        "D102": 3.728670344571583e-05
+      }
+    },
+    {
+      "query_id": "Q25",
+      "query_type": "arbitration_pair",
+      "pair_group": "P9",
+      "dilemma_text": "A visitor reaches a film festival desk. They ask for a place at an unrestricted discussion in a room with empty seats. How should the desk handle admission?",
+      "gold_primary_id": "D057",
+      "gold_competing_id": "D058",
+      "deciding_variable": "Scope of requested access",
+      "distractor_ids": [
+        "D045",
+        "D064"
+      ],
+      "expected_guidance_summary": "Welcome the visitor under the ordinary published terms.",
+      "seeds": [
+        "D057",
+        "D020",
+        "D100",
+        "D075",
+        "D066"
+      ],
+      "pool": [
+        "D009",
+        "D020",
+        "D024",
+        "D055",
+        "D057",
+        "D058",
+        "D062",
+        "D065",
+        "D066",
+        "D073",
+        "D075",
+        "D076",
+        "D099",
+        "D100",
+        "D101"
+      ],
+      "primary": "D057",
+      "top3": [
+        "D057",
+        "D058",
+        "D066"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.10438504039450433,
+      "base_relevance": {
+        "D009": 3.7288020394044e-05,
+        "D020": 3.72956637875177e-05,
+        "D024": 3.733929406735115e-05,
+        "D055": 3.728791489265859e-05,
+        "D057": 0.00499988766387105,
+        "D058": 0.005543756764382124,
+        "D062": 3.729513264261186e-05,
+        "D065": 8.275101572507992e-05,
+        "D066": 8.725111547391862e-05,
+        "D073": 3.7287558370735496e-05,
+        "D075": 3.835180541500449e-05,
+        "D076": 4.267476833774708e-05,
+        "D099": 6.847521581221372e-05,
+        "D100": 3.7976431485731155e-05,
+        "D101": 3.72884824173525e-05
+      },
+      "adjusted_relevance": {
+        "D009": 3.7288020394044e-05,
+        "D020": 3.72956637875177e-05,
+        "D024": 3.733929406735115e-05,
+        "D055": 3.728791489265859e-05,
+        "D057": 0.03950099312860402,
+        "D058": 0.005543756764382124,
+        "D062": 3.729513264261186e-05,
+        "D065": 8.275101572507992e-05,
+        "D066": 8.725111547391862e-05,
+        "D073": 3.7287558370735496e-05,
+        "D075": 3.835180541500449e-05,
+        "D076": 4.267476833774708e-05,
+        "D099": 6.847521581221372e-05,
+        "D100": 3.7976431485731155e-05,
+        "D101": 3.72884824173525e-05
+      }
+    },
+    {
+      "query_id": "Q26",
+      "query_type": "arbitration_pair",
+      "pair_group": "P9",
+      "dilemma_text": "A visitor reaches a film festival desk. They ask for custody of a distributor’s only signed screening master. How should the desk handle admission?",
+      "gold_primary_id": "D058",
+      "gold_competing_id": "D057",
+      "deciding_variable": "Scope of requested access",
+      "distractor_ids": [
+        "D045",
+        "D064"
+      ],
+      "expected_guidance_summary": "Verify the distributor’s authorization and document the handover before releasing custody.",
+      "seeds": [
+        "D058",
+        "D075",
+        "D057",
+        "D029",
+        "D020"
+      ],
+      "pool": [
+        "D009",
+        "D016",
+        "D020",
+        "D024",
+        "D029",
+        "D034",
+        "D055",
+        "D057",
+        "D058",
+        "D059",
+        "D073",
+        "D075",
+        "D076"
+      ],
+      "primary": "D057",
+      "top3": [
+        "D057",
+        "D058",
+        "D075"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.13131709070179612,
+      "base_relevance": {
+        "D009": 3.837342592305504e-05,
+        "D016": 3.7626003177138045e-05,
+        "D020": 3.810477937804535e-05,
+        "D024": 3.729872332769446e-05,
+        "D029": 5.2664021495729685e-05,
+        "D034": 3.7735782825620845e-05,
+        "D055": 4.428676766110584e-05,
+        "D057": 0.03200976178050041,
+        "D058": 0.021587461233139038,
+        "D059": 3.806265158345923e-05,
+        "D073": 3.730551907210611e-05,
+        "D075": 0.00015844104927964509,
+        "D076": 6.076956560718827e-05
+      },
+      "adjusted_relevance": {
+        "D009": 3.837342592305504e-05,
+        "D016": 3.7626003177138045e-05,
+        "D020": 3.810477937804535e-05,
+        "D024": 3.729872332769446e-05,
+        "D029": 5.2664021495729685e-05,
+        "D034": 3.7735782825620845e-05,
+        "D055": 4.428676766110584e-05,
+        "D057": 0.03200976178050041,
+        "D058": 0.021587461233139038,
+        "D059": 3.806265158345923e-05,
+        "D073": 3.730551907210611e-05,
+        "D075": 0.00015844104927964509,
+        "D076": 6.076956560718827e-05
+      }
+    },
+    {
+      "query_id": "Q27",
+      "query_type": "arbitration_pair",
+      "pair_group": "P10",
+      "dilemma_text": "A newsletter board is selecting an editor. It already has ample evidence of editing ability. The remaining question is how the candidate treats colleagues after praise or disappointment. What should it assess?",
+      "gold_primary_id": "D067",
+      "gold_competing_id": "D068",
+      "deciding_variable": "Missing evidence about the appointee",
+      "distractor_ids": [
+        "D035",
+        "D056"
+      ],
+      "expected_guidance_summary": "Compare conduct and attribution of responsibility across successes and setbacks.",
+      "seeds": [
+        "D068",
+        "D095",
+        "D035",
+        "D056",
+        "D067"
+      ],
+      "pool": [
+        "D023",
+        "D035",
+        "D036",
+        "D055",
+        "D056",
+        "D060",
+        "D067",
+        "D068",
+        "D069",
+        "D072",
+        "D094",
+        "D095",
+        "D096"
+      ],
+      "primary": "D067",
+      "top3": [
+        "D067",
+        "D068",
+        "D060"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.06600188298171598,
+      "base_relevance": {
+        "D023": 3.730476964847185e-05,
+        "D035": 4.8684578359825537e-05,
+        "D036": 3.9842136175138876e-05,
+        "D055": 6.252276216400787e-05,
+        "D056": 0.00047510737203992903,
+        "D060": 0.001312536303885281,
+        "D067": 0.13279344141483307,
+        "D068": 0.0030836379155516624,
+        "D069": 0.000234030929277651,
+        "D072": 0.00017057667719200253,
+        "D094": 3.977979940827936e-05,
+        "D095": 0.00017995368398260325,
+        "D096": 5.112491635372862e-05
+      },
+      "adjusted_relevance": {
+        "D023": 3.730476964847185e-05,
+        "D035": 4.8684578359825537e-05,
+        "D036": 3.9842136175138876e-05,
+        "D055": 6.252276216400787e-05,
+        "D056": 0.00047510737203992903,
+        "D060": 0.001312536303885281,
+        "D067": 0.13279344141483307,
+        "D068": 0.0030836379155516624,
+        "D069": 0.000234030929277651,
+        "D072": 0.00017057667719200253,
+        "D094": 3.977979940827936e-05,
+        "D095": 0.00017995368398260325,
+        "D096": 5.112491635372862e-05
+      }
+    },
+    {
+      "query_id": "Q28",
+      "query_type": "arbitration_pair",
+      "pair_group": "P10",
+      "dilemma_text": "A newsletter board is selecting an editor. It already has ample evidence of conduct after praise or disappointment. The remaining question is whether the candidate can edit a difficult issue. What should it assess?",
+      "gold_primary_id": "D068",
+      "gold_competing_id": "D067",
+      "deciding_variable": "Missing evidence about the appointee",
+      "distractor_ids": [
+        "D035",
+        "D056"
+      ],
+      "expected_guidance_summary": "Use a representative editing sample with declared criteria.",
+      "seeds": [
+        "D035",
+        "D068",
+        "D065",
+        "D095",
+        "D056"
+      ],
+      "pool": [
+        "D023",
+        "D035",
+        "D036",
+        "D055",
+        "D056",
+        "D060",
+        "D064",
+        "D065",
+        "D066",
+        "D067",
+        "D068",
+        "D072",
+        "D094",
+        "D095",
+        "D096"
+      ],
+      "primary": "D065",
+      "top3": [
+        "D065",
+        "D067",
+        "D068"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.06142837707429437,
+      "base_relevance": {
+        "D023": 3.7289584724931046e-05,
+        "D035": 0.00014052366896066815,
+        "D036": 3.801911952905357e-05,
+        "D055": 9.460631554247811e-05,
+        "D056": 0.00037985158269293606,
+        "D060": 0.00031746397144161165,
+        "D064": 5.474786303238943e-05,
+        "D065": 0.0019500202033668756,
+        "D066": 0.0006486183265224099,
+        "D067": 0.05993729457259178,
+        "D068": 0.0014867200516164303,
+        "D072": 0.0001389827812090516,
+        "D094": 3.776267476496287e-05,
+        "D095": 0.00011839275248348713,
+        "D096": 3.7494370189961046e-05
+      },
+      "adjusted_relevance": {
+        "D023": 3.7289584724931046e-05,
+        "D035": 0.00014052366896066815,
+        "D036": 3.801911952905357e-05,
+        "D055": 9.460631554247811e-05,
+        "D056": 0.00037985158269293606,
+        "D060": 0.00031746397144161165,
+        "D064": 5.474786303238943e-05,
+        "D065": 0.07937531136303733,
+        "D066": 0.0006486183265224099,
+        "D067": 0.05993729457259178,
+        "D068": 0.0014867200516164303,
+        "D072": 0.0001389827812090516,
+        "D094": 3.776267476496287e-05,
+        "D095": 0.00011839275248348713,
+        "D096": 3.7494370189961046e-05
+      }
+    },
+    {
+      "query_id": "Q29",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A residents’ mediator receives intimate details in a dispute and must send a short account of the issue to a maintenance panel. How should she prepare that account?",
+      "gold_primary_id": "D064",
+      "gold_competing_id": "D065",
+      "deciding_variable": "Privacy before compression",
+      "distractor_ids": [
+        "D041",
+        "D042"
+      ],
+      "expected_guidance_summary": "Agree on what can leave the private channel, then sift the authorized material for evidence the panel needs.",
+      "seeds": [
+        "D064",
+        "D041",
+        "D034",
+        "D045",
+        "D020"
+      ],
+      "pool": [
+        "D004",
+        "D009",
+        "D020",
+        "D024",
+        "D034",
+        "D036",
+        "D040",
+        "D041",
+        "D042",
+        "D043",
+        "D045",
+        "D046",
+        "D063",
+        "D064",
+        "D065"
+      ],
+      "primary": "D065",
+      "top3": [
+        "D065",
+        "D064",
+        "D004"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.12316719975799924,
+      "base_relevance": {
+        "D004": 0.0006543535273522139,
+        "D009": 5.6807119108270854e-05,
+        "D020": 4.3638134229695424e-05,
+        "D024": 3.867260966217145e-05,
+        "D034": 4.991934110876173e-05,
+        "D036": 3.747274604393169e-05,
+        "D040": 0.00011476712097646669,
+        "D041": 4.12093686463777e-05,
+        "D042": 8.112646173685789e-05,
+        "D043": 3.732897312147543e-05,
+        "D045": 4.3625110265566036e-05,
+        "D046": 3.7374920793809e-05,
+        "D063": 7.425036164931953e-05,
+        "D064": 0.0014998384285718203,
+        "D065": 0.006290134508162737
+      },
+      "adjusted_relevance": {
+        "D004": 0.0006543535273522139,
+        "D009": 5.6807119108270854e-05,
+        "D020": 4.3638134229695424e-05,
+        "D024": 3.867260966217145e-05,
+        "D034": 4.991934110876173e-05,
+        "D036": 3.747274604393169e-05,
+        "D040": 0.00011476712097646669,
+        "D041": 4.12093686463777e-05,
+        "D042": 8.112646173685789e-05,
+        "D043": 3.732897312147543e-05,
+        "D045": 4.3625110265566036e-05,
+        "D046": 3.7374920793809e-05,
+        "D063": 7.425036164931953e-05,
+        "D064": 0.0014998384285718203,
+        "D065": 0.006290134508162737
+      }
+    },
+    {
+      "query_id": "Q30",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "Two adult education centers want to sign a reciprocal exchange of classrooms. Neither has selected people who understand teaching requirements, room access and running costs. Which two steps belong in order?",
+      "gold_primary_id": "D066",
+      "gold_competing_id": "D062",
+      "deciding_variable": "Expertise before bilateral agreement",
+      "distractor_ids": [
+        "D061",
+        "D065"
+      ],
+      "expected_guidance_summary": "Convene a small council covering the missing knowledge, then negotiate reciprocal terms and responsibilities.",
+      "seeds": [
+        "D043",
+        "D062",
+        "D081",
+        "D100",
+        "D029"
+      ],
+      "pool": [
+        "D016",
+        "D029",
+        "D034",
+        "D043",
+        "D044",
+        "D045",
+        "D061",
+        "D062",
+        "D066",
+        "D079",
+        "D081",
+        "D082",
+        "D099",
+        "D100",
+        "D101"
+      ],
+      "primary": "D081",
+      "top3": [
+        "D081",
+        "D043",
+        "D029"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.14254220944064735,
+      "base_relevance": {
+        "D016": 3.7285884900484234e-05,
+        "D029": 0.0005387496785260737,
+        "D034": 3.729168383870274e-05,
+        "D043": 0.0005440714303404093,
+        "D044": 5.114315354148857e-05,
+        "D045": 0.0003777644888032228,
+        "D061": 6.782080890843645e-05,
+        "D062": 0.0002971745852846652,
+        "D066": 0.00017238275904674083,
+        "D079": 4.109818837605417e-05,
+        "D081": 0.0010447566164657474,
+        "D082": 0.00023236958077177405,
+        "D099": 4.1603205318097025e-05,
+        "D100": 7.320386066567153e-05,
+        "D101": 4.41234624304343e-05
+      },
+      "adjusted_relevance": {
+        "D016": 3.7285884900484234e-05,
+        "D029": 0.0005387496785260737,
+        "D034": 3.729168383870274e-05,
+        "D043": 0.0005440714303404093,
+        "D044": 5.114315354148857e-05,
+        "D045": 0.0003777644888032228,
+        "D061": 6.782080890843645e-05,
+        "D062": 0.0002971745852846652,
+        "D066": 0.00017238275904674083,
+        "D079": 4.109818837605417e-05,
+        "D081": 0.03897624811797868,
+        "D082": 0.00023236958077177405,
+        "D099": 4.1603205318097025e-05,
+        "D100": 7.320386066567153e-05,
+        "D101": 4.41234624304343e-05
+      }
+    },
+    {
+      "query_id": "Q31",
+      "query_type": "arbitration_pair",
+      "pair_group": "P11",
+      "dilemma_text": "A subtitler repeatedly loses the thread of a recording. The lapses track a loud ventilation unit and disappear at a different desk. What should change first?",
+      "gold_primary_id": "D085",
+      "gold_competing_id": "D086",
+      "deciding_variable": "Source of the distraction",
+      "distractor_ids": [
+        "D079",
+        "D080"
+      ],
+      "expected_guidance_summary": "Change the environment and compare error rates under quieter conditions.",
+      "seeds": [
+        "D051",
+        "D086",
+        "D021",
+        "D085",
+        "D071"
+      ],
+      "pool": [
+        "D021",
+        "D027",
+        "D028",
+        "D049",
+        "D051",
+        "D052",
+        "D070",
+        "D071",
+        "D072",
+        "D085",
+        "D086",
+        "D087",
+        "D090"
+      ],
+      "primary": "D086",
+      "top3": [
+        "D086",
+        "D051",
+        "D085"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.2841720688138209,
+      "base_relevance": {
+        "D021": 4.960433579981327e-05,
+        "D027": 3.729897434823215e-05,
+        "D028": 3.744434434338473e-05,
+        "D049": 5.7358927733730525e-05,
+        "D051": 0.00015756541688460857,
+        "D052": 4.144576087128371e-05,
+        "D070": 3.732096229214221e-05,
+        "D071": 0.00010679331899154931,
+        "D072": 0.00011175001418450847,
+        "D085": 0.0001339549053227529,
+        "D086": 0.00042159558506682515,
+        "D087": 3.730039679794572e-05,
+        "D090": 6.820593262091279e-05
+      },
+      "adjusted_relevance": {
+        "D021": 4.960433579981327e-05,
+        "D027": 3.729897434823215e-05,
+        "D028": 3.744434434338473e-05,
+        "D049": 5.7358927733730525e-05,
+        "D051": 0.00015756541688460857,
+        "D052": 4.144576087128371e-05,
+        "D070": 3.732096229214221e-05,
+        "D071": 0.00010679331899154931,
+        "D072": 0.00011175001418450847,
+        "D085": 0.0001339549053227529,
+        "D086": 0.00042159558506682515,
+        "D087": 3.730039679794572e-05,
+        "D090": 6.820593262091279e-05
+      }
+    },
+    {
+      "query_id": "Q32",
+      "query_type": "arbitration_pair",
+      "pair_group": "P11",
+      "dilemma_text": "A subtitler repeatedly loses the thread of a recording. The lapses track thoughts about an unrelated errand and continue at a different quiet desk. What should change first?",
+      "gold_primary_id": "D086",
+      "gold_competing_id": "D085",
+      "deciding_variable": "Source of the distraction",
+      "distractor_ids": [
+        "D079",
+        "D080"
+      ],
+      "expected_guidance_summary": "Mark the playback position and deliberately return to the current segment when attention wanders.",
+      "seeds": [
+        "D086",
+        "D047",
+        "D051",
+        "D021",
+        "D079"
+      ],
+      "pool": [
+        "D021",
+        "D027",
+        "D028",
+        "D046",
+        "D047",
+        "D048",
+        "D049",
+        "D051",
+        "D052",
+        "D079",
+        "D080",
+        "D081",
+        "D085",
+        "D086",
+        "D090"
+      ],
+      "primary": "D080",
+      "top3": [
+        "D080",
+        "D079",
+        "D047"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.17054062938670578,
+      "base_relevance": {
+        "D021": 8.125731255859137e-05,
+        "D027": 3.7324698496377096e-05,
+        "D028": 3.7886216887272894e-05,
+        "D046": 8.841059752739966e-05,
+        "D047": 0.00022658360830973834,
+        "D048": 3.8836849853396416e-05,
+        "D049": 5.3389354434330016e-05,
+        "D051": 6.013130769133568e-05,
+        "D052": 3.8130368920974433e-05,
+        "D079": 0.0011801269138231874,
+        "D080": 0.0002036194782704115,
+        "D081": 3.7300218536984175e-05,
+        "D085": 6.689726433251053e-05,
+        "D086": 0.00018366685253567994,
+        "D090": 8.145242463797331e-05
+      },
+      "adjusted_relevance": {
+        "D021": 8.125731255859137e-05,
+        "D027": 3.7324698496377096e-05,
+        "D028": 3.7886216887272894e-05,
+        "D046": 8.841059752739966e-05,
+        "D047": 0.00022658360830973834,
+        "D048": 3.8836849853396416e-05,
+        "D049": 5.3389354434330016e-05,
+        "D051": 6.013130769133568e-05,
+        "D052": 3.8130368920974433e-05,
+        "D079": 0.0011801269138231874,
+        "D080": 0.07673443156527354,
+        "D081": 3.7300218536984175e-05,
+        "D085": 6.689726433251053e-05,
+        "D086": 0.00018366685253567994,
+        "D090": 8.145242463797331e-05
+      }
+    },
+    {
+      "query_id": "Q33",
+      "query_type": "arbitration_pair",
+      "pair_group": "P12",
+      "dilemma_text": "A cycling association is considering an assistant for a limited role. Its uncertainty concerns an unknown pattern of conduct: it has only the person’s own character reference. What should it do first?",
+      "gold_primary_id": "D089",
+      "gold_competing_id": "D090",
+      "deciding_variable": "Status of behavioral evidence",
+      "distractor_ids": [
+        "D035",
+        "D068"
+      ],
+      "expected_guidance_summary": "Obtain relevant independent evidence across conduct, skill and completed work.",
+      "seeds": [
+        "D035",
+        "D023",
+        "D038",
+        "D025",
+        "D094"
+      ],
+      "pool": [
+        "D007",
+        "D012",
+        "D023",
+        "D025",
+        "D026",
+        "D035",
+        "D036",
+        "D037",
+        "D038",
+        "D042",
+        "D093",
+        "D094",
+        "D095"
+      ],
+      "primary": "D038",
+      "top3": [
+        "D038",
+        "D036",
+        "D035"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.06788976293124119,
+      "base_relevance": {
+        "D007": 0.0003300781245343387,
+        "D012": 3.7316869565984234e-05,
+        "D023": 9.072985994862393e-05,
+        "D025": 5.457797669805586e-05,
+        "D026": 4.5696138840867206e-05,
+        "D035": 0.0062761506997048855,
+        "D036": 6.211686559254304e-05,
+        "D037": 0.00011213258403586224,
+        "D038": 0.00027848436729982495,
+        "D042": 3.7319146940717474e-05,
+        "D093": 4.0751627238933e-05,
+        "D094": 4.277752304915339e-05,
+        "D095": 0.000925806409213692
+      },
+      "adjusted_relevance": {
+        "D007": 0.0003300781245343387,
+        "D012": 3.7316869565984234e-05,
+        "D023": 9.072985994862393e-05,
+        "D025": 5.457797669805586e-05,
+        "D026": 4.5696138840867206e-05,
+        "D035": 0.0062761506997048855,
+        "D036": 0.02586497380698347,
+        "D037": 0.00011213258403586224,
+        "D038": 0.027795806052017723,
+        "D042": 3.7319146940717474e-05,
+        "D093": 4.0751627238933e-05,
+        "D094": 4.277752304915339e-05,
+        "D095": 0.000925806409213692
+      }
+    },
+    {
+      "query_id": "Q34",
+      "query_type": "arbitration_pair",
+      "pair_group": "P12",
+      "dilemma_text": "A cycling association is considering an assistant for a limited role. Its uncertainty concerns return after a past failure: it has independent evidence of restitution and changed conduct. What should it do first?",
+      "gold_primary_id": "D090",
+      "gold_competing_id": "D089",
+      "deciding_variable": "Status of behavioral evidence",
+      "distractor_ids": [
+        "D035",
+        "D068"
+      ],
+      "expected_guidance_summary": "Offer a supervised return with a defined review and appropriate safeguards.",
+      "seeds": [
+        "D035",
+        "D009",
+        "D044",
+        "D094",
+        "D090"
+      ],
+      "pool": [
+        "D009",
+        "D020",
+        "D022",
+        "D023",
+        "D035",
+        "D036",
+        "D043",
+        "D044",
+        "D048",
+        "D086",
+        "D089",
+        "D090",
+        "D093",
+        "D094",
+        "D095"
+      ],
+      "primary": "D090",
+      "top3": [
+        "D090",
+        "D089",
+        "D036"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.07355600145575404,
+      "base_relevance": {
+        "D009": 0.0003260793164372444,
+        "D020": 0.00016655285435263067,
+        "D022": 5.797660196549259e-05,
+        "D023": 0.00010617909720167518,
+        "D035": 0.009210661984980106,
+        "D036": 8.628297655377537e-05,
+        "D043": 0.00035374279832467437,
+        "D044": 0.000316314137307927,
+        "D048": 0.00011261070903856307,
+        "D086": 0.0014880032977089286,
+        "D089": 0.05726150423288345,
+        "D090": 0.03362520411610603,
+        "D093": 9.79380783974193e-05,
+        "D094": 0.00023661158047616482,
+        "D095": 0.006454153917729855
+      },
+      "adjusted_relevance": {
+        "D009": 0.0003260793164372444,
+        "D020": 0.00016655285435263067,
+        "D022": 5.797660196549259e-05,
+        "D023": 0.00010617909720167518,
+        "D035": 0.009210661984980106,
+        "D036": 0.05179213299270486,
+        "D043": 0.00035374279832467437,
+        "D044": 0.000316314137307927,
+        "D048": 0.00011261070903856307,
+        "D086": 0.0014880032977089286,
+        "D089": 0.05726150423288345,
+        "D090": 0.19057870692340656,
+        "D093": 9.79380783974193e-05,
+        "D094": 0.00023661158047616482,
+        "D095": 0.006454153917729855
+      }
+    },
+    {
+      "query_id": "Q35",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A cold snap has stranded residents at a town hall. Everyone needs supper now, and there are also a few specialized supplies usable by only some residents. In what order should distribution proceed?",
+      "gold_primary_id": "D073",
+      "gold_competing_id": "D075",
+      "deciding_variable": "Basic relief before specialized matching",
+      "distractor_ids": [
+        "D074",
+        "D076"
+      ],
+      "expected_guidance_summary": "Make the basic meal available promptly, then check recipient needs and fit before allocating specialized supplies.",
+      "seeds": [
+        "D073",
+        "D075",
+        "D074",
+        "D045",
+        "D076"
+      ],
+      "pool": [
+        "D043",
+        "D045",
+        "D046",
+        "D073",
+        "D074",
+        "D075",
+        "D076",
+        "D077",
+        "D078"
+      ],
+      "primary": "D073",
+      "top3": [
+        "D073",
+        "D076",
+        "D075"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.19978800937989663,
+      "base_relevance": {
+        "D043": 3.729808304342441e-05,
+        "D045": 9.881217556539923e-05,
+        "D046": 3.747889059013687e-05,
+        "D073": 0.029210718348622322,
+        "D074": 0.0008815461187623441,
+        "D075": 0.0011620622826740146,
+        "D076": 0.0018641735659912229,
+        "D077": 3.728677620529197e-05,
+        "D078": 3.731722244992852e-05
+      },
+      "adjusted_relevance": {
+        "D043": 3.729808304342441e-05,
+        "D045": 9.881217556539923e-05,
+        "D046": 3.747889059013687e-05,
+        "D073": 0.3675236837705597,
+        "D074": 0.0008815461187623441,
+        "D075": 0.0011620622826740146,
+        "D076": 0.0018641735659912229,
+        "D077": 3.728677620529197e-05,
+        "D078": 3.731722244992852e-05
+      }
+    },
+    {
+      "query_id": "Q36",
+      "query_type": "synthesis",
+      "pair_group": null,
+      "dilemma_text": "A repertory company is offered a collection at a low price, but the lender may recall it after expensive restoration. Wardrobe staff who know the likely losses have been excluded from the review. How should the company evaluate the offer?",
+      "gold_primary_id": "D082",
+      "gold_competing_id": "D083",
+      "deciding_variable": "Contingent cost before challenging assumptions",
+      "distractor_ids": [
+        "D033",
+        "D081"
+      ],
+      "expected_guidance_summary": "Calculate exposure if the lender recalls the restored collection, then hear the excluded staff and revise the estimate.",
+      "seeds": [
+        "D082",
+        "D087",
+        "D044",
+        "D017",
+        "D037"
+      ],
+      "pool": [
+        "D015",
+        "D017",
+        "D037",
+        "D038",
+        "D039",
+        "D043",
+        "D044",
+        "D048",
+        "D081",
+        "D082",
+        "D083",
+        "D085",
+        "D087",
+        "D088"
+      ],
+      "primary": "D082",
+      "top3": [
+        "D082",
+        "D039",
+        "D038"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.09486621353613671,
+      "base_relevance": {
+        "D015": 0.00015726161655038595,
+        "D017": 3.9431040931958705e-05,
+        "D037": 4.2564824980217963e-05,
+        "D038": 0.00017817426123656332,
+        "D039": 0.0008719042525626719,
+        "D043": 3.759731043828651e-05,
+        "D044": 9.217995830113068e-05,
+        "D048": 0.00013340194709599018,
+        "D081": 3.783923966693692e-05,
+        "D082": 0.0002858837542589754,
+        "D083": 4.118418655707501e-05,
+        "D085": 3.806475433520973e-05,
+        "D087": 6.634840974584222e-05,
+        "D088": 4.0167247789213434e-05
+      },
+      "adjusted_relevance": {
+        "D015": 0.00015726161655038595,
+        "D017": 3.9431040931958705e-05,
+        "D037": 4.2564824980217963e-05,
+        "D038": 0.00017817426123656332,
+        "D039": 0.0008719042525626719,
+        "D043": 3.759731043828651e-05,
+        "D044": 9.217995830113068e-05,
+        "D048": 0.00013340194709599018,
+        "D081": 3.783923966693692e-05,
+        "D082": 0.09969698200275161,
+        "D083": 4.118418655707501e-05,
+        "D085": 3.806475433520973e-05,
+        "D087": 6.634840974584222e-05,
+        "D088": 4.0167247789213434e-05
+      }
+    },
+    {
+      "query_id": "Q37",
+      "query_type": "arbitration_pair",
+      "pair_group": "P13",
+      "dilemma_text": "A journal has a release due today and a named deputy. Its editor will leave in six months and can supervise the transition. What should the board activate?",
+      "gold_primary_id": "D093",
+      "gold_competing_id": "D094",
+      "deciding_variable": "Availability of the incumbent",
+      "distractor_ids": [
+        "D068",
+        "D096"
+      ],
+      "expected_guidance_summary": "Use the handover period to teach, observe and verify readiness.",
+      "seeds": [
+        "D094",
+        "D093",
+        "D018",
+        "D054",
+        "D100"
+      ],
+      "pool": [
+        "D007",
+        "D018",
+        "D029",
+        "D050",
+        "D053",
+        "D054",
+        "D091",
+        "D093",
+        "D094",
+        "D095",
+        "D099",
+        "D100",
+        "D101"
+      ],
+      "primary": "D094",
+      "top3": [
+        "D094",
+        "D018",
+        "D091"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.1625835259162278,
+      "base_relevance": {
+        "D007": 8.67994167492725e-05,
+        "D018": 0.0003612572036217898,
+        "D029": 3.873118112096563e-05,
+        "D050": 7.314560207305476e-05,
+        "D053": 4.5608976506628096e-05,
+        "D054": 0.0001064646930899471,
+        "D091": 0.000212319748243317,
+        "D093": 5.842382597620599e-05,
+        "D094": 0.007381998933851719,
+        "D095": 3.7832025554962456e-05,
+        "D099": 0.00011157879634993151,
+        "D100": 3.948857556679286e-05,
+        "D101": 3.7287773011485115e-05
+      },
+      "adjusted_relevance": {
+        "D007": 8.67994167492725e-05,
+        "D018": 0.0003612572036217898,
+        "D029": 3.873118112096563e-05,
+        "D050": 7.314560207305476e-05,
+        "D053": 4.5608976506628096e-05,
+        "D054": 0.0001064646930899471,
+        "D091": 0.000212319748243317,
+        "D093": 5.842382597620599e-05,
+        "D094": 0.007381998933851719,
+        "D095": 3.7832025554962456e-05,
+        "D099": 0.00011157879634993151,
+        "D100": 3.948857556679286e-05,
+        "D101": 3.7287773011485115e-05
+      }
+    },
+    {
+      "query_id": "Q38",
+      "query_type": "arbitration_pair",
+      "pair_group": "P13",
+      "dilemma_text": "A journal has a release due today and a named deputy. Its editor has just become unavailable and cannot supervise the transition. What should the board activate?",
+      "gold_primary_id": "D094",
+      "gold_competing_id": "D093",
+      "deciding_variable": "Availability of the incumbent",
+      "distractor_ids": [
+        "D068",
+        "D096"
+      ],
+      "expected_guidance_summary": "Activate the limited interim delegation and communicate who can authorize the release.",
+      "seeds": [
+        "D094",
+        "D093",
+        "D018",
+        "D034",
+        "D100"
+      ],
+      "pool": [
+        "D004",
+        "D007",
+        "D018",
+        "D029",
+        "D034",
+        "D036",
+        "D091",
+        "D093",
+        "D094",
+        "D095",
+        "D099",
+        "D100",
+        "D101"
+      ],
+      "primary": "D094",
+      "top3": [
+        "D094",
+        "D093",
+        "D018"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.15029112005388512,
+      "base_relevance": {
+        "D004": 4.4781318138120696e-05,
+        "D007": 4.1297611460322514e-05,
+        "D018": 0.00012906163465231657,
+        "D029": 3.7318721297197044e-05,
+        "D034": 4.037054895889014e-05,
+        "D036": 3.7587524275295436e-05,
+        "D091": 7.924444798845798e-05,
+        "D093": 0.0006946237990632653,
+        "D094": 0.05914035439491272,
+        "D095": 3.7436919228639454e-05,
+        "D099": 5.9610159951262176e-05,
+        "D100": 3.7797439290443435e-05,
+        "D101": 3.72894064639695e-05
+      },
+      "adjusted_relevance": {
+        "D004": 4.4781318138120696e-05,
+        "D007": 4.1297611460322514e-05,
+        "D018": 0.00012906163465231657,
+        "D029": 3.7318721297197044e-05,
+        "D034": 4.037054895889014e-05,
+        "D036": 3.7587524275295436e-05,
+        "D091": 7.924444798845798e-05,
+        "D093": 0.0006946237990632653,
+        "D094": 0.14113246521446854,
+        "D095": 3.7436919228639454e-05,
+        "D099": 5.9610159951262176e-05,
+        "D100": 3.7797439290443435e-05,
+        "D101": 3.72894064639695e-05
+      }
+    },
+    {
+      "query_id": "Q39",
+      "query_type": "arbitration_pair",
+      "pair_group": "P14",
+      "dilemma_text": "A print collective has a store of unused material that keeps well. Its inventory projection shows the coming dry season will consume all of it. What should the collective do with the material?",
+      "gold_primary_id": "D105",
+      "gold_competing_id": "D106",
+      "deciding_variable": "Reserve sufficiency",
+      "distractor_ids": [
+        "D017",
+        "D074"
+      ],
+      "expected_guidance_summary": "Retain the material against documented future consumption and review the projection.",
+      "seeds": [
+        "D002",
+        "D074",
+        "D033",
+        "D003",
+        "D017"
+      ],
+      "pool": [
+        "D002",
+        "D003",
+        "D006",
+        "D011",
+        "D014",
+        "D015",
+        "D017",
+        "D032",
+        "D033",
+        "D073",
+        "D074",
+        "D078"
+      ],
+      "primary": "D073",
+      "top3": [
+        "D073",
+        "D015",
+        "D033"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.20569415128992605,
+      "base_relevance": {
+        "D002": 9.978082380257547e-05,
+        "D003": 9.61158875725232e-05,
+        "D006": 4.23480523750186e-05,
+        "D011": 3.7311816413421184e-05,
+        "D014": 3.920801464118995e-05,
+        "D015": 0.0007183867273852229,
+        "D017": 0.00012729210720863193,
+        "D032": 4.3385352910263464e-05,
+        "D033": 0.000519904657267034,
+        "D073": 0.0009104532655328512,
+        "D074": 0.000391933397622779,
+        "D078": 5.043997225584462e-05
+      },
+      "adjusted_relevance": {
+        "D002": 9.978082380257547e-05,
+        "D003": 9.61158875725232e-05,
+        "D006": 4.23480523750186e-05,
+        "D011": 3.7311816413421184e-05,
+        "D014": 3.920801464118995e-05,
+        "D015": 0.0007183867273852229,
+        "D017": 0.00012729210720863193,
+        "D032": 4.3385352910263464e-05,
+        "D033": 0.000519904657267034,
+        "D073": 0.03086356124549638,
+        "D074": 0.000391933397622779,
+        "D078": 5.043997225584462e-05
+      }
+    },
+    {
+      "query_id": "Q40",
+      "query_type": "arbitration_pair",
+      "pair_group": "P14",
+      "dilemma_text": "A print collective has a store of unused material that keeps well. Its inventory projection shows the coming dry season is fully covered by separate stock. What should the collective do with the material?",
+      "gold_primary_id": "D106",
+      "gold_competing_id": "D105",
+      "deciding_variable": "Reserve sufficiency",
+      "distractor_ids": [
+        "D017",
+        "D074"
+      ],
+      "expected_guidance_summary": "Put the genuinely uncommitted surplus into productive use under an agreed allocation.",
+      "seeds": [
+        "D033",
+        "D074",
+        "D002",
+        "D017",
+        "D106"
+      ],
+      "pool": [
+        "D002",
+        "D011",
+        "D015",
+        "D017",
+        "D032",
+        "D033",
+        "D073",
+        "D074",
+        "D078",
+        "D105",
+        "D106",
+        "D107"
+      ],
+      "primary": "D073",
+      "top3": [
+        "D073",
+        "D015",
+        "D074"
+      ],
+      "abstained": false,
+      "abstention_prob": 0.18535604841786152,
+      "base_relevance": {
+        "D002": 0.00010870290134334937,
+        "D011": 3.7351830542320386e-05,
+        "D015": 0.001539992168545723,
+        "D017": 0.0005837492644786835,
+        "D032": 6.661499355686828e-05,
+        "D033": 0.0003038214927073568,
+        "D073": 0.0015539090381935239,
+        "D074": 0.0006846814067102969,
+        "D078": 8.877716754795983e-05,
+        "D105": 0.00022893607092555612,
+        "D106": 0.00021477323025465012,
+        "D107": 4.519351205090061e-05
+      },
+      "adjusted_relevance": {
+        "D002": 0.00010870290134334937,
+        "D011": 3.7351830542320386e-05,
+        "D015": 0.001539992168545723,
+        "D017": 0.0005837492644786835,
+        "D032": 6.661499355686828e-05,
+        "D033": 0.0003038214927073568,
+        "D073": 0.0015539090381935239,
+        "D074": 0.0006846814067102969,
+        "D078": 8.877716754795983e-05,
+        "D105": 0.00022893607092555612,
+        "D106": 0.00021477323025465012,
+        "D107": 4.519351205090061e-05
+      }
+    },
+    {
+      "query_id": "Q41",
+      "query_type": "abstention",
+      "pair_group": null,
+      "dilemma_text": "What is the exact isotopic ratio in this untested shard of vitreous glaze? No assay has been performed.",
+      "gold_primary_id": null,
+      "gold_competing_id": null,
+      "deciding_variable": "Missing empirical measurement",
+      "distractor_ids": [
+        "D016",
+        "D037"
+      ],
+      "expected_guidance_summary": "Abstain. An isotopic measurement of the specimen is needed to determine the ratio.",
+      "seeds": [
+        "D041",
+        "D068",
+        "D079",
+        "D075",
+        "D072"
+      ],
+      "pool": [
+        "D040",
+        "D041",
+        "D042",
+        "D067",
+        "D068",
+        "D071",
+        "D072",
+        "D073",
+        "D075",
+        "D076",
+        "D079",
+        "D080",
+        "D081"
+      ],
+      "primary": "Abstain",
+      "top3": [
+        "D071",
+        "D072",
+        "D041"
+      ],
+      "abstained": true,
+      "abstention_prob": 0.8692215878031637,
+      "base_relevance": {
+        "D040": 3.731096148840152e-05,
+        "D041": 9.76392111624591e-05,
+        "D042": 3.730466414708644e-05,
+        "D067": 4.2398442019475624e-05,
+        "D068": 3.730804382939823e-05,
+        "D071": 0.0010243941796943545,
+        "D072": 0.0005339314811863005,
+        "D073": 3.7395599065348506e-05,
+        "D075": 3.729939999175258e-05,
+        "D076": 3.736725921044126e-05,
+        "D079": 3.736423241207376e-05,
+        "D080": 3.735268546734005e-05,
+        "D081": 3.7331890780478716e-05
+      },
+      "adjusted_relevance": {
+        "D040": 3.731096148840152e-05,
+        "D041": 9.76392111624591e-05,
+        "D042": 3.730466414708644e-05,
+        "D067": 4.2398442019475624e-05,
+        "D068": 3.730804382939823e-05,
+        "D071": 0.0010243941796943545,
+        "D072": 0.0005339314811863005,
+        "D073": 3.7395599065348506e-05,
+        "D075": 3.729939999175258e-05,
+        "D076": 3.736725921044126e-05,
+        "D079": 3.736423241207376e-05,
+        "D080": 3.735268546734005e-05,
+        "D081": 3.7331890780478716e-05
+      }
+    },
+    {
+      "query_id": "Q42",
+      "query_type": "abstention",
+      "pair_group": null,
+      "dilemma_text": "At what second did the unrecorded bell in a sealed room stop vibrating yesterday? No observation or trace survives.",
+      "gold_primary_id": null,
+      "gold_competing_id": null,
+      "deciding_variable": "Unobserved historical measurement",
+      "distractor_ids": [
+        "D037",
+        "D055"
+      ],
+      "expected_guidance_summary": "Abstain. The exact time requires evidence that the question does not provide.",
+      "seeds": [
+        "D013",
+        "D021",
+        "D040",
+        "D095",
+        "D048"
+      ],
+      "pool": [
+        "D010",
+        "D013",
+        "D021",
+        "D027",
+        "D028",
+        "D039",
+        "D040",
+        "D041",
+        "D044",
+        "D047",
+        "D048",
+        "D094",
+        "D095",
+        "D096"
+      ],
+      "primary": "Abstain",
+      "top3": [
+        "D013",
+        "D021",
+        "D040"
+      ],
+      "abstained": true,
+      "abstention_prob": 0.6741527033368087,
+      "base_relevance": {
+        "D010": 3.967981319874525e-05,
+        "D013": 0.0005520086269825697,
+        "D021": 4.5261916966410354e-05,
+        "D027": 3.741400360013358e-05,
+        "D028": 3.7323312426451594e-05,
+        "D039": 3.7301568227121606e-05,
+        "D040": 4.1588093154132366e-05,
+        "D041": 3.7326262827264145e-05,
+        "D044": 3.73360890080221e-05,
+        "D047": 3.858740092255175e-05,
+        "D048": 3.9120055589592084e-05,
+        "D094": 3.7291112676030025e-05,
+        "D095": 3.784158616326749e-05,
+        "D096": 3.729104355443269e-05
+      },
+      "adjusted_relevance": {
+        "D010": 3.967981319874525e-05,
+        "D013": 0.0005520086269825697,
+        "D021": 4.5261916966410354e-05,
+        "D027": 3.741400360013358e-05,
+        "D028": 3.7323312426451594e-05,
+        "D039": 3.7301568227121606e-05,
+        "D040": 4.1588093154132366e-05,
+        "D041": 3.7326262827264145e-05,
+        "D044": 3.73360890080221e-05,
+        "D047": 3.858740092255175e-05,
+        "D048": 3.9120055589592084e-05,
+        "D094": 3.7291112676030025e-05,
+        "D095": 3.784158616326749e-05,
+        "D096": 3.729104355443269e-05
+      }
+    }
+  ]
+}

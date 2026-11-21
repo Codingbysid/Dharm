@@ -1,0 +1,85 @@
+108 passages, 222 training anchors, 840 labeled relevance pairs, 0 dev passages.
+Training on mps
+Retriever 1:   0%|          | 0/14 [00:00<?, ?it/s]Retriever 1:   7%|▋         | 1/14 [00:54<11:50, 54.67s/it]Retriever 1:   7%|▋         | 1/14 [02:17<29:45, 137.37s/it]
+Traceback (most recent call last):
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/train_retriever_and_arbitrator.py", line 402, in <module>
+    main()
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/train_retriever_and_arbitrator.py", line 368, in main
+    bi=train_bi(train,args,device)
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/train_retriever_and_arbitrator.py", line 191, in train_bi
+    rival = encode([cards[train[k][CONTRAST]["id"]] for k in keys])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/train_retriever_and_arbitrator.py", line 177, in encode
+    return F.normalize(model(tokens)["sentence_embedding"],dim=-1)
+                       ^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/sentence_transformers/SentenceTransformer.py", line 690, in forward
+    input = module(input, **module_kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/sentence_transformers/models/Transformer.py", line 442, in forward
+    output_states = self.auto_model(**trans_features, **kwargs, return_dict=False)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/models/bert/modeling_bert.py", line 1142, in forward
+    encoder_outputs = self.encoder(
+                      ^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/models/bert/modeling_bert.py", line 695, in forward
+    layer_outputs = layer_module(
+                    ^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/models/bert/modeling_bert.py", line 627, in forward
+    layer_output = apply_chunking_to_forward(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/pytorch_utils.py", line 261, in apply_chunking_to_forward
+    return forward_fn(*input_tensors)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/models/bert/modeling_bert.py", line 639, in feed_forward_chunk
+    intermediate_output = self.intermediate(attention_output)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/transformers/models/bert/modeling_bert.py", line 539, in forward
+    hidden_states = self.dense(hidden_states)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddharthgupta/Downloads/Documents/dharm/decision-corpus-ml/.venv/lib/python3.11/site-packages/torch/nn/modules/linear.py", line 125, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: MPS backend out of memory (MPS allocated: 8.75 GB, other allocations: 304.48 MB, max allowed: 9.07 GB). Tried to allocate 36.00 MB on private pool. Use PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 to disable upper limit for memory allocations (may cause system failure).
