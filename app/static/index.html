@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dharm — Institutional Decision Assistant</title>
+  <style>
+    :root {
+      --bg: #0f141c;
+      --panel-bg: #161e2b;
+      --card-bg: #1d2738;
+      --card-border: #2c3a52;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #8b5cf6;
+      --user-bubble: #1e3a5f;
+      --assistant-bubble: #1a2434;
+      --citation-bg: #223046;
+      --citation-border: #3b82f6;
+      --error-bg: #451a1a;
+      --error-border: #ef4444;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .app-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .app-badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .mode-badge {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .mode-live {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .mode-preview {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .new-chat-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .new-chat-btn:hover {
+      background: var(--card-bg);
+      border-color: var(--primary);
+    }
+
+    /* Chat Messages Container */
+    #chat-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      scroll-behavior: smooth;
+    }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .message-row.user {
+      align-items: flex-end;
+    }
+    .message-row.assistant {
+      align-items: flex-start;
+    }
+
+    .bubble {
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      line-height: 1.55;
+      word-break: break-word;
+      max-width: 90%;
+    }
+    .message-row.user .bubble {
+      background: var(--user-bubble);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .message-row.assistant .bubble {
+      background: var(--assistant-bubble);
+      border: 1px solid var(--card-border);
+      border-bottom-left-radius: 2px;
+    }
+
+    /* Markdown Styling */
+    .bubble p { margin-bottom: 10px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble strong { color: #fff; }
+    .bubble ul, .bubble ol { margin: 8px 0 8px 20px; }
+    .bubble li { margin-bottom: 4px; }
+    .bubble code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.88em;
+    }
+
+    /* Meta Info / Status Banner inside Assistant Bubble */
+    .meta-bar {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .meta-tag {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* Citations List */
+    .citations-container {
+      margin-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+    .citations-header {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .citation-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .citation-chip {
+      background: var(--citation-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: #93c5fd;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .citation-chip:hover {
+      border-color: var(--citation-border);
+      background: #273750;
+    }
+    .citation-chip .id-badge {
+      font-weight: 700;
+      color: #60a5fa;
+    }
+
+    /* Citation Modal/Card expansion */
+    .citation-detail-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin-top: 6px;
+      display: none;
+    }
+    .citation-detail-card.active { display: block; }
+    .citation-detail-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .citation-detail-field { margin-bottom: 4px; }
+    .citation-detail-field span { color: var(--text-muted); }
+
+    /* Composer */
+    footer {
+      background: var(--panel-bg);
+      border-top: 1px solid var(--card-border);
+      padding: 14px 20px;
+      flex-shrink: 0;
+    }
+    .composer-inner {
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .input-box-wrapper {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      transition: border-color 0.15s ease;
+    }
+    .input-box-wrapper:focus-within {
+      border-color: var(--primary);
+    }
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      resize: none;
+      max-height: 180px;
+      min-height: 44px;
+      outline: none;
+      padding-right: 80px;
+    }
+    .btn-group {
+      position: absolute;
+      right: 10px;
+      bottom: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    button.send-btn, button.stop-btn, button.retry-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+    button.send-btn {
+      background: var(--primary);
+      color: #fff;
+    }
+    button.send-btn:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+    button.send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    button.stop-btn {
+      background: #dc2626;
+      color: #fff;
+      display: none;
+    }
+    button.stop-btn.active { display: flex; }
+    button.retry-btn {
+      background: #475569;
+      color: #fff;
+      display: none;
+    }
+    button.retry-btn.active { display: flex; }
+    .composer-hint {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      padding: 0 4px;
+    }
+
+    /* Error Toast */
+    .error-banner {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+      margin-bottom: 8px;
+    }
+    .error-banner.active { display: block; }
+
+    /* Narrow mobile adjustments */
+    @media (max-width: 600px) {
+      header { padding: 10px 14px; }
+      .app-title { font-size: 1rem; }
+      #chat-container { padding: 14px 10px; gap: 14px; }
+      .bubble { max-width: 100%; font-size: 0.9rem; }
+      footer { padding: 10px 12px; }
+      textarea { font-size: 0.9rem; padding-right: 70px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <div class="app-title">Dharm Decision Corpus</div>
+      <div class="app-badge">RC1: Pair-Verifier</div>
+      <div id="mode-indicator" class="mode-badge mode-preview">Checking mode...</div>
+    </div>
+    <button class="new-chat-btn" onclick="startNewChat()">
+      <span>+</span> New Chat
+    </button>
+  </header>
+
+  <div id="chat-container">
+    <!-- Initial Greeting -->
+    <div class="message-row assistant">
+      <div class="bubble">
+        <p><strong>Welcome to Dharm</strong>. I am your institutional decision assistant grounded in classical governance and statecraft principles (Arthashastra, Chanakya traditions).</p>
+        <p>Present any administrative impasse, sequential workflow challenge, or prioritization dilemma to receive an authoritative, grounded decision recommendation.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="composer-inner">
+      <div id="error-toast" class="error-banner"></div>
+      <div class="input-box-wrapper">
+        <textarea id="message-input" placeholder="Describe an institutional dilemma, priority conflict, or ask a question..." rows="1"></textarea>
+        <div class="btn-group">
+          <button id="stop-btn" class="stop-btn" onclick="stopGeneration()">Stop</button>
+          <button id="retry-btn" class="retry-btn" onclick="retryLast()">Retry</button>
+          <button id="send-btn" class="send-btn" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+      <div class="composer-hint">
+        <span>Enter to send, Shift+Enter for newline</span>
+        <span id="session-info">Session: active</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let currentSessionId = 'session_' + Math.random().toString(36).substring(2, 10);
+    let lastFailedMessage = '';
+    let abortController = null;
+    let isGenerating = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageInput = document.getElementById('message-input');
+    const sendBtn = document.getElementById('send-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const errorToast = document.getElementById('error-toast');
+    const modeIndicator = document.getElementById('mode-indicator');
+    const sessionInfo = document.getElementById('session-info');
+
+    // Auto-resize textarea
+    messageInput.addEventListener('input', () => {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 180) + 'px';
+    });
+
+    // Enter sends, Shift+Enter newline
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Fetch initial health/mode status
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.api_key_configured) {
+            modeIndicator.className = 'mode-badge mode-live';
+            modeIndicator.textContent = 'Live Generation: Gemini 2.5 Flash';
+          } else {
+            modeIndicator.className = 'mode-badge mode-preview';
+            modeIndicator.textContent = 'Retrieval Preview Mode (Set GEMINI_API_KEY)';
+          }
+        }
+      } catch (e) {
+        modeIndicator.textContent = 'Server Offline';
+      }
+    }
+    checkHealth();
+
+    function startNewChat() {
+      if (isGenerating) stopGeneration();
+      currentSessionId = 'session_' + Math.random().toString(36).substring(2, 10);
+      sessionInfo.textContent = 'Session: ' + currentSessionId.slice(-6);
+
+      chatContainer.innerHTML = `
+        <div class="message-row assistant">
+          <div class="bubble">
+            <p><strong>New Chat Started</strong>. Ready for your governance dilemma or policy question.</p>
+          </div>
+        </div>
+      `;
+      clearError();
+      messageInput.focus();
+    }
+
+    function showError(msg) {
+      errorToast.textContent = msg;
+      errorToast.classList.add('active');
+      retryBtn.classList.add('active');
+    }
+
+    function clearError() {
+      errorToast.textContent = '';
+      errorToast.classList.remove('active');
+      retryBtn.classList.remove('active');
+    }
+
+    function stopGeneration() {
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
+      setGenerating(false);
+    }
+
+    function retryLast() {
+      if (lastFailedMessage) {
+        messageInput.value = lastFailedMessage;
+        clearError();
+        sendMessage();
+      }
+    }
+
+    function setGenerating(flag) {
+      isGenerating = flag;
+      sendBtn.disabled = flag;
+      if (flag) {
+        stopBtn.classList.add('active');
+      } else {
+        stopBtn.classList.remove('active');
+      }
+    }
+
+    function appendMessage(role, text) {
+      const row = document.createElement('div');
+      row.className = `message-row ${role}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = renderMarkdown(text);
+      row.appendChild(bubble);
+      chatContainer.appendChild(row);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      return { row, bubble };
+    }
+
+    function renderMarkdown(md) {
+      if (!md) return '';
+      // Basic markdown replacement
+      let html = md
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br/>');
+      return `<p>${html}</p>`;
+    }
+
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || isGenerating) return;
+
+      clearError();
+      appendMessage('user', text);
+
+      // Keep draft in memory in case of network or server failure
+      lastFailedMessage = text;
+      messageInput.value = '';
+      messageInput.style.height = '44px';
+
+      setGenerating(true);
+      abortController = new AbortController();
+
+      const { row: assistantRow, bubble: assistantBubble } = appendMessage('assistant', 'Thinking...');
+      let accumulatedText = '';
+      let metadata = null;
+
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            session_id: currentSessionId
+          }),
+          signal: abortController.signal
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server returned ${resp.status}`);
+        }
+
+        const reader = resp.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop(); // keep remainder
+
+          for (const block of lines) {
+            const rawLines = block.split('\n');
+            let eventType = 'chunk';
+            let dataStr = '';
+
+            for (const line of rawLines) {
+              if (line.startsWith('event: ')) {
+                eventType = line.slice(7).trim();
+              } else if (line.startsWith('data: ')) {
+                dataStr = line.slice(6).trim();
+              }
+            }
+
+            if (!dataStr) continue;
+
+            if (eventType === 'metadata') {
+              metadata = JSON.parse(dataStr);
+            } else if (eventType === 'chunk') {
+              const chunkObj = JSON.parse(dataStr);
+              accumulatedText += chunkObj.text;
+              assistantBubble.innerHTML = renderMarkdown(accumulatedText);
+              chatContainer.scrollTop = chatContainer.scrollHeight;
+            } else if (eventType === 'error') {
+              const errObj = JSON.parse(dataStr);
+              throw new Error(errObj.error || 'Unknown streaming error');
+            }
+          }
+        }
+
+        // Render Citations and Metadata once stream completes
+        if (metadata) {
+          renderCitationsAndMeta(assistantRow, metadata);
+        }
+
+        // Clear draft on successful completion
+        lastFailedMessage = '';
+        setGenerating(false);
+
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          assistantBubble.innerHTML += '<p><em>[Stream stopped by user]</em></p>';
+        } else {
+          showError(`Send error: ${err.message}. Draft preserved.`);
+          assistantBubble.innerHTML = `<p style="color:#f87171;"><strong>Error:</strong> ${err.message}</p>`;
+          // Restore draft to input so user never loses work
+          messageInput.value = lastFailedMessage;
+        }
+        setGenerating(false);
+      }
+    }
+
+    function renderCitationsAndMeta(row, meta) {
+      if (!meta.citations || meta.citations.length === 0) return;
+
+      const container = document.createElement('div');
+      container.className = 'citations-container';
+
+      const header = document.createElement('div');
+      header.className = 'citations-header';
+      header.textContent = `Authoritative Corpus Citations (${meta.citations.length})`;
+      container.appendChild(header);
+
+      const chips = document.createElement('div');
+      chips.className = 'citation-chips';
+
+      meta.citations.forEach((c) => {
+        const chip = document.createElement('div');
+        chip.className = 'citation-chip';
+        chip.innerHTML = `<span class="id-badge">[${c.id}]</span> <span>${c.work} ${c.locator}</span>`;
+
+        const detailCard = document.createElement('div');
+        detailCard.className = 'citation-detail-card';
+        detailCard.id = `detail-${c.id}`;
+        detailCard.innerHTML = `
+          <div class="citation-detail-header">
+            <span>[${c.id}] ${c.work} ${c.locator}</span>
+            <span style="font-size:0.75rem; color:#94a3b8;">Click badge to close</span>
+          </div>
+          <div class="citation-detail-field"><span>Derived Principle:</span> ${c.principle}</div>
+          <div class="citation-detail-field"><span>English Translation:</span> "${c.translation}"</div>
+          <div class="citation-detail-field"><span>Context:</span> ${c.context}</div>
+          ${c.modern_application ? `<div class="citation-detail-field"><span>Modern Application:</span> ${c.modern_application}</div>` : ''}
+          ${c.source_url ? `<div class="citation-detail-field"><span>Source/Cues:</span> <span style="word-break:break-all;">${c.source_url}</span></div>` : ''}
+        `;
+
+        chip.addEventListener('click', () => {
+          detailCard.classList.toggle('active');
+        });
+
+        chips.appendChild(chip);
+        container.appendChild(detailCard);
+      });
+
+      container.appendChild(chips);
+
+      // Meta tags (abstention / verifier status)
+      const metaBar = document.createElement('div');
+      metaBar.className = 'meta-bar';
+      if (meta.primary) metaBar.innerHTML += `<span class="meta-tag">Primary: ${meta.primary}</span>`;
+      if (meta.pair_promoted) metaBar.innerHTML += `<span class="meta-tag" style="color:#34d399;">Workflow Promoted: [${meta.promoted_pair.join(' → ')}]</span>`;
+      if (meta.acceptance_score !== null) metaBar.innerHTML += `<span class="meta-tag">Verifier Score: ${meta.acceptance_score.toFixed(4)}</span>`;
+      if (meta.fallback_reason) metaBar.innerHTML += `<span class="meta-tag">Gate: ${meta.fallback_reason}</span>`;
+
+      container.appendChild(metaBar);
+      row.appendChild(container);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  </script>
+</body>
+</html>
