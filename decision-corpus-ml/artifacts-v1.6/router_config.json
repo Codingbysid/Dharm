@@ -1,0 +1,209 @@
+{
+  "router_model_type": "LogisticRegression(C=1.0)",
+  "query_encoder": "BAAI/bge-small-en-v1.5",
+  "query_prefix": "Represent this sentence for searching relevant passages: ",
+  "predeclared_max_fpr": 0.05,
+  "calibrated_threshold": 0.33,
+  "calibration_metrics": {
+    "total_positives": 216,
+    "total_negatives": 324,
+    "selected_tp": 216,
+    "selected_fp": 16,
+    "selected_fpr": 0.04938271604938271,
+    "selected_recall": 1.0
+  },
+  "operating_points_sample": [
+    {
+      "threshold": 0.0,
+      "fp": 324,
+      "total_neg": 324,
+      "fpr": 1.0,
+      "tp": 216,
+      "total_pos": 216,
+      "recall": 1.0,
+      "precision": 0.4
+    },
+    {
+      "threshold": 0.2,
+      "fp": 87,
+      "total_neg": 324,
+      "fpr": 0.2685,
+      "tp": 216,
+      "total_pos": 216,
+      "recall": 1.0,
+      "precision": 0.7129
+    },
+    {
+      "threshold": 0.33,
+      "fp": 16,
+      "total_neg": 324,
+      "fpr": 0.0494,
+      "tp": 216,
+      "total_pos": 216,
+      "recall": 1.0,
+      "precision": 0.931
+    },
+    {
+      "threshold": 0.4,
+      "fp": 5,
+      "total_neg": 324,
+      "fpr": 0.0154,
+      "tp": 215,
+      "total_pos": 216,
+      "recall": 0.9954,
+      "precision": 0.9773
+    },
+    {
+      "threshold": 0.5,
+      "fp": 1,
+      "total_neg": 324,
+      "fpr": 0.0031,
+      "tp": 200,
+      "total_pos": 216,
+      "recall": 0.9259,
+      "precision": 0.995
+    },
+    {
+      "threshold": 0.7,
+      "fp": 0,
+      "total_neg": 324,
+      "fpr": 0.0,
+      "tp": 134,
+      "total_pos": 216,
+      "recall": 0.6204,
+      "precision": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "fp": 0,
+      "total_neg": 324,
+      "fpr": 0.0,
+      "tp": 109,
+      "total_pos": 216,
+      "recall": 0.5046,
+      "precision": 1.0
+    },
+    {
+      "threshold": 0.9,
+      "fp": 0,
+      "total_neg": 324,
+      "fpr": 0.0,
+      "tp": 2,
+      "total_pos": 216,
+      "recall": 0.0093,
+      "precision": 1.0
+    },
+    {
+      "threshold": 1.0,
+      "fp": 0,
+      "total_neg": 324,
+      "fpr": 0.0,
+      "tp": 0,
+      "total_pos": 216,
+      "recall": 0.0,
+      "precision": 1.0
+    }
+  ],
+  "split_verification": {
+    "folds_count": 5,
+    "all_overlaps_zero": true,
+    "folds": [
+      {
+        "fold": 0,
+        "train_groups_count": 43,
+        "val_groups_count": 11,
+        "val_groups": [
+          "PAIR_01",
+          "PAIR_06",
+          "PAIR_11",
+          "PAIR_16",
+          "PAIR_21",
+          "PAIR_31",
+          "PAIR_36",
+          "PAIR_41",
+          "PAIR_46",
+          "PAIR_51",
+          "PAIR_53"
+        ],
+        "overlap_count": 0
+      },
+      {
+        "fold": 1,
+        "train_groups_count": 43,
+        "val_groups_count": 11,
+        "val_groups": [
+          "PAIR_05",
+          "PAIR_10",
+          "PAIR_13",
+          "PAIR_15",
+          "PAIR_20",
+          "PAIR_25",
+          "PAIR_30",
+          "PAIR_35",
+          "PAIR_40",
+          "PAIR_45",
+          "PAIR_50"
+        ],
+        "overlap_count": 0
+      },
+      {
+        "fold": 2,
+        "train_groups_count": 43,
+        "val_groups_count": 11,
+        "val_groups": [
+          "PAIR_04",
+          "PAIR_09",
+          "PAIR_14",
+          "PAIR_19",
+          "PAIR_24",
+          "PAIR_26",
+          "PAIR_29",
+          "PAIR_34",
+          "PAIR_39",
+          "PAIR_44",
+          "PAIR_49"
+        ],
+        "overlap_count": 0
+      },
+      {
+        "fold": 3,
+        "train_groups_count": 43,
+        "val_groups_count": 11,
+        "val_groups": [
+          "PAIR_00",
+          "PAIR_03",
+          "PAIR_08",
+          "PAIR_12",
+          "PAIR_18",
+          "PAIR_23",
+          "PAIR_27",
+          "PAIR_33",
+          "PAIR_38",
+          "PAIR_43",
+          "PAIR_48"
+        ],
+        "overlap_count": 0
+      },
+      {
+        "fold": 4,
+        "train_groups_count": 44,
+        "val_groups_count": 10,
+        "val_groups": [
+          "PAIR_02",
+          "PAIR_07",
+          "PAIR_17",
+          "PAIR_22",
+          "PAIR_28",
+          "PAIR_32",
+          "PAIR_37",
+          "PAIR_42",
+          "PAIR_47",
+          "PAIR_52"
+        ],
+        "overlap_count": 0
+      }
+    ]
+  },
+  "materials": "decisions_v0.2.jsonl, chanakya_daily_supplement.jsonl (benchmark excluded)",
+  "config_sha256": "daf174f880aa85efe3833ffbe9326f12c588f374ca479ff8dbc9634f7e9db3f5"
+}
