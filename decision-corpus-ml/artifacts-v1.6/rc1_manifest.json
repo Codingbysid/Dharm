@@ -1,0 +1,92 @@
+{
+  "release_candidate": "pair-verifier-rc1",
+  "branch": "release/pair-verifier-rc1",
+  "base_commit": "554274cb998e48dbe065b2fe62f3bd18b75b8643",
+  "timestamp": "2026-11-21T13:16:00Z",
+  "configuration_hashes": {
+    "verifier_config_sha256": "5be7becdc389871d92dcab4b37a3a8e9687fe51930a8fb2de0d50e0ac49494ea",
+    "pair_scorer_config_sha256": "49d5f7a5b0d19556d2976d2067d972d74752919c8cd04248ba99c955a8fe279e",
+    "router_config_sha256": "daf174f880aa85efe3833ffbe9326f12c588f374ca479ff8dbc9634f7e9db3f5"
+  },
+  "models": {
+    "dense_embedder": "BAAI/bge-small-en-v1.5",
+    "cross_encoder": "BAAI/bge-reranker-base",
+    "nli_model": "cross-encoder/nli-deberta-v3-small",
+    "abstention_classifier": "artifacts-v1.1/abstention_clf.joblib",
+    "workflow_intent_router": "artifacts-v1.6/workflow_router.joblib",
+    "pair_verifier_model": "artifacts-v1.6/pair_verifier_model.joblib"
+  },
+  "frozen_parameters": {
+    "abstention_threshold": 0.65,
+    "stage1_seeds": 7,
+    "rrf_constant_k": 20.0,
+    "stage1_blend_weights": {
+      "rrf_norm": 0.55,
+      "ce_norm": 0.45
+    },
+    "nli_arbitration": {
+      "topical_gate_threshold": 0.72,
+      "shift_margin": 0.05,
+      "boost_factor": 0.15,
+      "penalty_factor": 0.05
+    },
+    "v1_3_workflow_ordering": {
+      "max_endpoint_gate": 0.70,
+      "min_endpoint_gate": 0.35,
+      "first_bonus": 0.10,
+      "second_bonus": 0.06
+    },
+    "pair_scorer_margins": {
+      "tau_self": -0.5,
+      "tau_pool": -1.0
+    },
+    "verifier": {
+      "model_type": "StandardScaler + LogisticRegression(C=1.0)",
+      "calibrated_threshold": 0.57,
+      "num_features": 16,
+      "feature_names": [
+        "diff_self",
+        "diff_pool",
+        "diff_min",
+        "endpoint_span",
+        "j_score",
+        "max_self",
+        "min_self",
+        "rank_u",
+        "rank_v",
+        "min_rank",
+        "max_rank",
+        "rank_sum",
+        "both_in_top2",
+        "both_in_top3",
+        "both_in_top5",
+        "router_prob"
+      ]
+    },
+    "fallback_policy": "v1.3 exact bit-for-bit on rejection or absence of proposed pair"
+  },
+  "benchmark_metrics_regression_42": {
+    "all": {
+      "recall_at_3": 0.6578947368421053,
+      "flip": [5, 14],
+      "abstention_precision": [4, 4],
+      "abstention_recall": [4, 4],
+      "ordered_synthesis": [3, 10]
+    },
+    "original_18": {
+      "recall_at_3": 0.6875,
+      "flip": [2, 6],
+      "abstention_precision": [2, 2],
+      "abstention_recall": [2, 2],
+      "ordered_synthesis": [1, 4]
+    },
+    "new_24": {
+      "recall_at_3": 0.6363636363636364,
+      "flip": [3, 8],
+      "abstention_precision": [2, 2],
+      "abstention_recall": [2, 2],
+      "ordered_synthesis": [2, 6]
+    }
+  },
+  "blind_validation_status": "PENDING (independently authored evaluation dataset not yet supplied)"
+}

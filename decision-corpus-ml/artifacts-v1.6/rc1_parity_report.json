@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-11-21T13:15:00Z",
+  "total_queries": 42,
+  "cold_startup_time_sec": 9.772852708003484,
+  "latency_stats_sec": {
+    "mean": 4.545011030742899,
+    "median": 4.227566000074148,
+    "p95": 6.931283024681033,
+    "min": 2.9081994999432936,
+    "max": 8.146119249984622
+  },
+  "agreement": {
+    "abstention": [
+      42,
+      42
+    ],
+    "pair_proposal": [
+      42,
+      42
+    ],
+    "verifier_decision": [
+      42,
+      42
+    ],
+    "primary": [
+      42,
+      42
+    ],
+    "ordered_top3": [
+      42,
+      42
+    ]
+  },
+  "prob_divergences": [],
+  "all_match": true
+}
