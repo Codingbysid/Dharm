@@ -284,6 +284,46 @@ class WindowDirection(unittest.TestCase):
         self.assertIn("public service", unrelated.limit.casefold())
 
 
+class DeadlineWording(unittest.TestCase):
+    """Fresh wording cases. They do not change which passage is selected."""
+
+    def test_replaced_deadline_is_explained_once(self):
+        plan = DecisionPlan(
+            disposition="answer",
+            decision="The archive transfer is due next week.",
+            action="Record the constraints each party must meet.",
+            reason="We can still gather comments. Friday morning is only when the decision is due, and the decision is now due Friday morning, replacing next week.",
+            supports=[Support("D001", "Record the constraints each party must meet.", "primary")],
+            facts=[
+                "decision deadline replaced: next week -> Friday morning",
+                "update: We can still gather comments. Friday morning is only when the decision is due.",
+            ],
+        )
+        text = render_plan(plan)
+        self.assertEqual(plan.disposition, "answer")
+        self.assertEqual(plan.supports[0].id, "D001")
+        self.assertTrue(text.startswith(plan.action))
+        self.assertEqual(text.count("this step still fits"), 1)
+        self.assertNotIn("replacing", text.casefold())
+        self.assertIn(
+            "Because we can still gather comments, and Friday morning is only when the decision is due, instead of next week, this step still fits.",
+            text,
+        )
+
+        only_time = DecisionPlan(
+            disposition="answer",
+            decision="The exhibit loan was due today.",
+            action="Record the constraints each party must meet.",
+            reason="The exhibit loan was due today, and the decision is now due a week, replacing today.",
+            supports=[Support("D001", "Record the constraints each party must meet.", "primary")],
+            facts=["decision deadline replaced: today -> a week"],
+        )
+        revised = render_plan(only_time)
+        self.assertEqual(only_time.supports[0].id, "D001")
+        self.assertIn("The decision is now due a week instead of today, so this step still fits.", revised)
+        self.assertEqual(revised.count("today"), 1)
+
+
 class Editor(unittest.TestCase):
     def plan(self):
         return DecisionPlan(
