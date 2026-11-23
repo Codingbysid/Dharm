@@ -39,7 +39,7 @@ def _load_local_env():
 _load_local_env()
 
 from app.conversation import detect_query_intent, formulate_retrieval_query
-from app.editor import accept_edit, editor_enabled, synthesize_grounded_reply
+from app.editor import accept_edit, editor_enabled, review_grounded_reply, synthesize_grounded_reply
 from app.planner import build_plan
 from app.render import render_plan
 
@@ -211,21 +211,24 @@ async def chat(request: ChatRequest):
 
     plan = build_plan(user_msg, history, intent, retrieval, records)
     edited = False
+    review_result = None
     if plan.disposition == "answer" and editor_enabled():
-        evidence = [
-            {"id": item.id, "principle": item.principle}
-            for item in plan.supports
-        ]
         try:
-            rewritten = await asyncio.wait_for(
-                run_in_threadpool(synthesize_grounded_reply, plan, evidence),
-                timeout=12,
+            review_result = await run_in_threadpool(
+                review_grounded_reply, plan, records, timeout=12.0
             )
         except Exception:
-            rewritten = None
-        if rewritten and accept_edit(plan, rewritten):
-            plan.applied = rewritten
-            edited = True
+            review_result = None
+        if review_result:
+            if review_result.get("accepted"):
+                plan.applied = review_result.get("explanation")
+                edited = True
+            elif review_result.get("verdict") == "needs_clarification" and review_result.get("missing_fact"):
+                plan.disposition = "clarify"
+                fact = review_result["missing_fact"].strip()
+                plan.clarify_kind = "missing_fact"
+                plan.action = f"To settle this, does {fact}?"
+                plan.applied = None
     text = render_plan(plan)
     cited_ids = [item.id for item in plan.supports] if plan.disposition == "answer" else []
     citations = []
@@ -241,6 +244,7 @@ async def chat(request: ChatRequest):
         "citations": citations,
         "edited": edited,
         "provider_mode": "Edited" if edited else "Dharm",
+        "editor_verdict": review_result.get("verdict") if review_result else None,
     }
     if os.getenv("DHARM_TRACE"):
         print(json.dumps({
@@ -253,6 +257,7 @@ async def chat(request: ChatRequest):
             "disposition": plan.disposition,
             "cited_ids": cited_ids,
             "edited": edited,
+            "editor_verdict": review_result.get("verdict") if review_result else None,
         }, ensure_ascii=False), flush=True)
 
     async def event_generator():

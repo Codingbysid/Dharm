@@ -52,8 +52,8 @@ def test_orientation_extraction(corpus_records):
         else:
             pytest.fail(f"Invalid sequence_role at {rid}: {role}")
 
-    assert follow_count == 54
-    assert precede_count == 54
+    assert follow_count == 60
+    assert precede_count == 60
 
 
 def test_reciprocal_deduplication(corpus_records, v1_3_report):

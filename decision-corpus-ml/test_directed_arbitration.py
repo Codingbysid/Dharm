@@ -72,8 +72,8 @@ def test_corpus_nonreciprocal_edge_count(corpus_records):
         elif u < v:
             reciprocal.append((u, v))
 
-    assert len(corpus_records) == 108
-    assert len(reciprocal) == 42  # 42 pairs = 84 reciprocal edges
+    assert len(corpus_records) == 120
+    assert len(reciprocal) == 48  # 48 pairs = 96 reciprocal edges (42 classical + 6 Gita)
     assert len(nonreciprocal) == 24, f"Expected 24 nonreciprocal edges, got {len(nonreciprocal)}"
 
 
