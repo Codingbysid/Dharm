@@ -2,6 +2,8 @@
 
 A machine learning framework and benchmark suite for ethical dilemma arbitration, legal/moral retrieval, and epistemic abstention over ancient and classical jurisprudence corpora (**108 passages, 222 anchors, 840 contrastive pairs, 42 evaluation dilemmas**).
 
+The chat app runs locally with `./scripts/run_local.sh` and is documented in `app/BETA.md`.
+
 ---
 
 ## 📊 Benchmark Progression

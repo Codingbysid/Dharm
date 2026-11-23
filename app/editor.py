@@ -1,0 +1,104 @@
+"""Optional Gemini copy editor.
+
+Dharm keeps the disposition, action, second action, limit, and source IDs.
+Gemini may rewrite only the explanatory reason. One call is made per eligible
+answer. Any timeout, missing key, rate limit, malformed payload, invented
+source, or reversed action returns the original reason.
+"""
+import os
+import re
+
+import httpx
+
+_ID = re.compile(r"\b([A-Za-z]{1,4}\d{2,4})\b")
+_NOT = re.compile(r"\b(do not|don't|never|avoid|instead of|rather than|the opposite)\b", re.I)
+
+
+def editor_enabled():
+    if os.getenv("GEMINI_EDITOR", "1") == "0":
+        return False
+    return bool(os.getenv("GEMINI_API_KEY"))
+
+
+def _verbs(action):
+    return re.findall(r"\b[a-z]{4,}\b", (action or "").casefold())[:4]
+
+
+def accept_edit(plan, reason):
+    """Reject an edit that adds a source or reverses the approved action."""
+    text = (reason or "").strip()
+    if not text or len(text) > 800:
+        return False
+    allowed = {item.id.upper() for item in plan.supports}
+    mentioned = {match.group(1).upper() for match in _ID.finditer(text)}
+    if mentioned - allowed:
+        return False
+    if mentioned or re.search(r"\b(first|next|then),", text, re.I):
+        return False
+    folded = text.casefold()
+    if _NOT.search(text):
+        for verb in _verbs(plan.action):
+            if verb in folded:
+                return False
+    return True
+
+
+def edit_reason(plan, evidence):
+    """One server-side edit. Returns a new reason, or None to keep Dharm's."""
+    key = os.getenv("GEMINI_API_KEY", "")
+    if not key or plan.disposition != "answer":
+        return None
+    model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    payload = {
+        "contents": [{
+            "role": "user",
+            "parts": [{
+                "text": (
+                    "Rewrite only the reason so it is easier to read. Describe the user's situation and any deadline. "
+                    "Do not restate the action, the second step, or the limit. Do not give a new instruction. "
+                    "Do not add a source or a passage id. Do not recommend the opposite. "
+                    "Return JSON with one field, reason.\n\n"
+                    f"Decision: {plan.decision}\n"
+                    f"Action to preserve: {plan.action}\n"
+                    f"Second action to preserve: {plan.second_action or 'none'}\n"
+                    f"Limit to preserve: {plan.limit or 'none'}\n"
+                    f"Facts: {'; '.join(plan.facts) or 'none'}\n"
+                    f"Current reason: {plan.reason}\n"
+                    f"Evidence: {evidence}"
+                )
+            }],
+        }],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 512,
+            "thinkingConfig": {"thinkingBudget": 0},
+            "responseMimeType": "application/json",
+            "responseSchema": {
+                "type": "OBJECT",
+                "properties": {"reason": {"type": "STRING"}},
+                "required": ["reason"],
+            },
+        },
+    }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    try:
+        response = httpx.post(
+            url,
+            headers={"x-goog-api-key": key, "Content-Type": "application/json"},
+            json=payload,
+            timeout=12.0,
+        )
+    except httpx.HTTPError:
+        return None
+    if response.status_code != 200:
+        return None
+    try:
+        body = response.json()
+        text = body["candidates"][0]["content"]["parts"][0]["text"]
+        import json
+        reason = json.loads(text).get("reason")
+    except (KeyError, IndexError, TypeError, ValueError):
+        return None
+    if not accept_edit(plan, reason):
+        return None
+    return reason.strip()

@@ -1,63 +1,71 @@
-"""FastAPI Application Server for Dharm Decision Corpus Chat.
+"""FastAPI chat server.
 
-Serves:
-- Single-process model initialization via lifespan (DharmRC1Engine loaded ONCE).
-- SSE streaming chat endpoint with real-time token delivery and metadata events.
-- Server-side validated citation lookup endpoint (/api/citations/{id}).
-- In-memory isolated multi-turn session management.
-- Static web chat UI (/ and static assets).
+One process loads RC1. Each reply is a DecisionPlan rendered locally. Gemini,
+when configured, may rewrite only the reason.
 """
-import secrets
 import asyncio
 from contextlib import asynccontextmanager
 import json
 import os
 from pathlib import Path
+import secrets
 import sys
 from typing import Any, Dict, List, Optional
 import uuid
 
 from fastapi import FastAPI, HTTPException, Request
-from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
-# Add decision-corpus-ml to python path so rc1_inference can be imported cleanly
 BASE_DIR = Path(__file__).resolve().parent.parent
 ML_DIR = BASE_DIR / "decision-corpus-ml"
 if str(ML_DIR) not in sys.path:
     sys.path.insert(0, str(ML_DIR))
 
 
-from app.generator import (
-    build_system_prompt,
-    detect_query_intent,
-    formulate_retrieval_query,
-    MODEL, WELCOME, local_model_available, stream_answer,
-)
+def _load_local_env():
+    path = BASE_DIR / ".env"
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_local_env()
+
+from app.conversation import detect_query_intent, formulate_retrieval_query
+from app.editor import accept_edit, edit_reason, editor_enabled
+from app.planner import build_plan
+from app.render import render_plan
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
-
-# In-memory session store: session_id -> list of {"role": "user"|"assistant", "content": str, "metadata": dict}
 SESSIONS: Dict[str, List[Dict[str, Any]]] = {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Load retrieval models and indices once at server startup."""
-    print("=" * 80)
-    print("Initializing Dharm RC1 Engine (Loading models once per process)...")
+    if os.getenv("DHARM_SKIP_ENGINE") == "1":
+        app.state.engine = getattr(app.state, "engine", None)
+        app.state.records = getattr(app.state, "records", {})
+        app.state.model_lock = getattr(app.state, "model_lock", None) or asyncio.Lock()
+        yield
+        return
+    print("Initializing Dharm RC1 Engine...", flush=True)
     from rc1_inference import DharmRC1Engine
     app.state.engine = DharmRC1Engine(device="cpu")
     app.state.model_lock = asyncio.Lock()
     app.state.records = app.state.engine.records
-    print(f"Dharm RC1 Engine Ready! Loaded {len(app.state.records)} corpus records.")
-    print("=" * 80)
+    print(f"Dharm RC1 Engine Ready. Loaded {len(app.state.records)} records.", flush=True)
     yield
-    print("Shutting down Dharm server...")
 
 
-app = FastAPI(title="Dharm Local Chat Application", lifespan=lifespan)
+app = FastAPI(title="Dharm", lifespan=lifespan)
+
 
 @app.middleware("http")
 async def backend_token(request: Request, call_next):
@@ -76,7 +84,6 @@ class ChatRequest(BaseModel):
 
 @app.get("/")
 async def root():
-    """Serve the chat frontend."""
     index_file = STATIC_DIR / "index.html"
     if not index_file.exists():
         raise HTTPException(status_code=404, detail="Frontend index.html not found.")
@@ -85,184 +92,128 @@ async def root():
 
 @app.get("/api/health")
 async def health():
-    """Health check endpoint showing model, provider, and active session count."""
-    ready = await local_model_available()
+    records = getattr(app.state, "records", {}) or {}
     return {
-        "status": "online",
-        "engine": "DharmRC1Engine",
-        "release_candidate": "pair-verifier-rc1",
-        "provider_mode": MODEL if ready else "Sources only",
-        "generation_ready": ready,
-        "total_sessions": len(SESSIONS),
-        "records_loaded": len(app.state.records),
+        "status": "online" if records else "starting",
+        "ready": bool(records),
+        "records_loaded": len(records),
+        "editor": editor_enabled(),
     }
 
 
 @app.get("/api/citations/{passage_id}")
 async def get_citation(passage_id: str):
-    """Return validated record details for a specific citation ID."""
     pid = passage_id.strip().upper()
     records = app.state.records
     if pid not in records:
         raise HTTPException(status_code=404, detail=f"Passage ID '{pid}' not found in corpus.")
+    row = records[pid]
+    return _citation(pid, row)
 
-    r = records[pid]
+
+def _citation(pid, row):
     return {
         "id": pid,
-        "work": r["work"],
-        "locator": r["locator"],
-        "decision_domain": r["decision_domain"],
-        "urgency_level": r["urgency_level"],
-        "reversibility": r["reversibility"],
-        "derived_principle": r["derived_principle"],
-        "context_summary": r["context_summary"],
-        "english_translation": r["english_translation"],
-        "modern_application": r["scenarios_json"][0]["scenario"] if r.get("scenarios_json") else "",
-        "sequence_role": r.get("complementary_passage_id", {}).get("sequence_role", ""),
-        "contrast_condition": r.get("competing_passage_id", {}).get("condition", ""),
-        "contrast_target_id": r.get("competing_passage_id", {}).get("id", ""),
-        "source_url": r.get("source_url", ""),
+        "work": row.get("work", ""),
+        "locator": row.get("locator", ""),
+        "translation": row.get("english_translation", ""),
+        "principle": row.get("derived_principle", ""),
+        "source_url": row.get("source_url", ""),
     }
 
 
-@app.post("/api/sessions/clear")
-async def clear_session(session_id: str):
-    """Clear conversation history for a session."""
-    if session_id in SESSIONS:
-        del SESSIONS[session_id]
-    return {"status": "cleared", "session_id": session_id}
+def _empty_retrieval(abstained=False):
+    return {
+        "abstained": abstained,
+        "abstention_prob": 1.0 if abstained else 0.0,
+        "primary": "Abstain" if abstained else None,
+        "top3": [],
+        "pair_promoted": False,
+        "promoted_pair": None,
+        "acceptance_score": None,
+    }
 
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
-    """Streaming chat endpoint using Server-Sent Events (SSE)."""
     user_msg = request.message.strip()
     if not user_msg:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
     session_id = request.session_id or str(uuid.uuid4())
-    if session_id not in SESSIONS:
-        SESSIONS[session_id] = []
-
-    history = SESSIONS[session_id]
-
-    engine = app.state.engine
-    records = app.state.records
-
-    # 1. Detect conversational intent & formulate retrieval query
+    history = SESSIONS.setdefault(session_id, [])
+    records = app.state.records or {}
     intent = detect_query_intent(user_msg, history)
     query_text = formulate_retrieval_query(user_msg, history, intent)
 
-    # 2. Run Dharm retrieval pipeline (unless it is an ordinary greeting or out-of-scope)
-    if intent == "greeting":
-        retrieval_res = {
-            "abstained": False,
-            "abstention_prob": 0.0,
-            "primary": None,
-            "top3": [],
-            "pair_promoted": False,
-            "promoted_pair": None,
-            "acceptance_score": None,
-            "fallback_reason": None,
-        }
+    if intent in {"greeting", "clarify"}:
+        retrieval = _empty_retrieval(False)
     elif intent == "out_of_scope":
-        retrieval_res = {
-            "abstained": True,
-            "abstention_prob": 1.0,
-            "primary": "Abstain",
-            "top3": [],
-            "pair_promoted": False,
-            "promoted_pair": None,
-            "acceptance_score": None,
-            "fallback_reason": "out_of_scope_domain",
-        }
+        retrieval = _empty_retrieval(True)
     else:
-        # Run local RC1 inference
         async with app.state.model_lock:
-            retrieval_res = await run_in_threadpool(engine.predict, query_text)
+            retrieval = await run_in_threadpool(app.state.engine.predict, query_text)
 
-    # 3. Build verified citation metadata
-    validated_citations = []
-    top3_ids = retrieval_res.get("top3", [])
-    for pid in top3_ids:
-        if pid in records:
-            r = records[pid]
-            validated_citations.append({
-                "id": pid,
-                "work": r["work"],
-                "locator": r["locator"],
-                "principle": r["derived_principle"],
-                "translation": r["english_translation"],
-                "context": r["context_summary"],
-                "modern_application": r["scenarios_json"][0]["scenario"] if r.get("scenarios_json") else "",
-                "source_url": r.get("source_url", ""),
-            })
+    plan = build_plan(user_msg, history, intent, retrieval, records)
+    edited = False
+    if plan.disposition == "answer" and editor_enabled():
+        evidence = [
+            {"id": item.id, "principle": item.principle}
+            for item in plan.supports
+        ]
+        try:
+            rewritten = await asyncio.wait_for(
+                run_in_threadpool(edit_reason, plan, evidence),
+                timeout=12,
+            )
+        except Exception:
+            rewritten = None
+        if rewritten and accept_edit(plan, rewritten):
+            plan.reason = rewritten
+            edited = True
+    text = render_plan(plan)
+    cited_ids = [item.id for item in plan.supports]
+    citations = [_citation(pid, records[pid]) for pid in (retrieval.get("top3") or []) if pid in records]
 
-    ready = await local_model_available() if intent != "greeting" and not retrieval_res["abstained"] else False
-    provider_mode = MODEL if ready else "Sources only"
-
-    metadata_payload = {
+    metadata = {
         "session_id": session_id,
         "intent": intent,
-        "abstained": retrieval_res.get("abstained", False),
-        "abstention_prob": retrieval_res.get("abstention_prob", 0.0),
-        "primary": retrieval_res.get("primary"),
-        "top3": retrieval_res.get("top3", []),
-        "pair_promoted": retrieval_res.get("pair_promoted", False),
-        "promoted_pair": retrieval_res.get("promoted_pair"),
-        "acceptance_score": retrieval_res.get("acceptance_score"),
-        "fallback_reason": retrieval_res.get("fallback_reason"),
-        "citations": validated_citations,
-        "provider_mode": provider_mode,
-        "reformulated_query": query_text if intent == "followup" else None,
+        "disposition": plan.disposition,
+        "plan": plan.as_dict(),
+        "cited_ids": cited_ids,
+        "citations": citations,
+        "edited": edited,
+        "provider_mode": "Edited" if edited else "Dharm",
     }
-
-    system_prompt = build_system_prompt(records, retrieval_res, intent) if ready else ""
+    if os.getenv("DHARM_TRACE"):
+        print(json.dumps({
+            "user": user_msg,
+            "intent": intent,
+            "retrieval_query": query_text,
+            "top3": retrieval.get("top3"),
+            "abstained": retrieval.get("abstained"),
+            "pair_promoted": retrieval.get("pair_promoted"),
+            "disposition": plan.disposition,
+            "cited_ids": cited_ids,
+            "edited": edited,
+        }, ensure_ascii=False), flush=True)
 
     async def event_generator():
-        # Emit metadata event first
-        yield f"event: metadata\ndata: {json.dumps(metadata_payload)}\n\n"
-
-        full_assistant_reply = []
-
-        try:
-            if ready:
-                async for chunk in stream_answer(system_prompt, query_text):
-                    full_assistant_reply.append(chunk)
-                    yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
-            else:
-                if intent == "greeting":
-                    text = WELCOME
-                elif retrieval_res["abstained"]:
-                    text = "I couldn't ground this question in a passage. What decision are you trying to make?"
-                else:
-                    text = "Local generation is unavailable. You can explore the retrieved sources below."
-                full_assistant_reply.append(text)
-                yield f"event: chunk\ndata: {json.dumps({'text': text})}\n\n"
-
-            # Save to conversation history
-            complete_text = "".join(full_assistant_reply)
-            history.append({"role": "user", "content": user_msg})
-            history.append({
-                "role": "assistant",
-                "content": complete_text,
-                "metadata": metadata_payload,
-            })
-
-            del history[:-12]
-            yield 'event: done\ndata: {"status":"complete"}\n\n'
-
-        except Exception:
-            yield f"event: error\ndata: {json.dumps({'error': 'Could not complete the reply. Please retry.'})}\n\n"
+        yield f"event: metadata\ndata: {json.dumps(metadata)}\n\n"
+        yield f"event: chunk\ndata: {json.dumps({'text': text})}\n\n"
+        history.append({"role": "user", "content": user_msg})
+        history.append({
+            "role": "assistant",
+            "content": text,
+            "metadata": {"intent": intent, "plan": plan.as_dict()},
+        })
+        del history[:-12]
+        yield 'event: done\ndata: {"status":"complete"}\n\n'
 
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        }
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
 
 

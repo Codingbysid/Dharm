@@ -1,3 +1,5 @@
+# Optional later host for the retrieval backend. Do not start this until a
+# spending limit is accepted. The frontend on Vercel stays a separate deploy.
 services:
   backend:
     build:
@@ -7,13 +9,10 @@ services:
       - "127.0.0.1:8000:8000"
     environment:
       DHARM_BACKEND_TOKEN: ${DHARM_BACKEND_TOKEN:?Set a private backend token}
-      OLLAMA_BASE_URL: http://ollama:11434
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
+      GEMINI_EDITOR: ${GEMINI_EDITOR:-0}
     volumes:
       - hf:/models/huggingface
-  ollama:
-    image: ollama/ollama
-    volumes:
-      - ollama:/root/.ollama
 volumes:
   hf:
-  ollama:
