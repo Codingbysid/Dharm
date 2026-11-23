@@ -221,10 +221,12 @@ class Regressions(unittest.TestCase):
         self.assertNotIn("cutoff", support_words(RECORDS["D001"]))
         self.assertIn("cutoff", (RECORDS["D001"]["competing_passage_id"]["flip_to_competing_when"]).casefold())
 
-    def test_editor_stays_off_without_an_explicit_switch(self):
+    def test_editor_opens_when_a_key_is_present(self):
         os.environ["GEMINI_API_KEY"] = "present"
         os.environ.pop("GEMINI_EDITOR", None)
         try:
+            self.assertTrue(editor_enabled())
+            os.environ["GEMINI_EDITOR"] = "0"
             self.assertFalse(editor_enabled())
         finally:
             os.environ.pop("GEMINI_API_KEY", None)

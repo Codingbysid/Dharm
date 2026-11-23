@@ -22,8 +22,10 @@ _CONTRARY = (
 
 
 def editor_enabled():
-    """Off unless GEMINI_EDITOR=1, even when a key is present."""
-    return os.getenv("GEMINI_EDITOR", "0") == "1" and bool(os.getenv("GEMINI_API_KEY"))
+    """On when an API key is present, unless GEMINI_EDITOR=0."""
+    if os.getenv("GEMINI_EDITOR", "1") == "0":
+        return False
+    return bool(os.getenv("GEMINI_API_KEY"))
 
 
 def _contradicts(action, text):

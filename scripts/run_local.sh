@@ -1,6 +1,6 @@
 #!/bin/sh
 # One local command. Retrieval runs in this process. Gemini stays off unless
-# GEMINI_API_KEY is set and GEMINI_EDITOR is not 0.
+# GEMINI_API_KEY is set and GEMINI_EDITOR is not 0. The editor defaults open.
 cd "$(dirname "$0")/.." || exit 1
 PYTHON="decision-corpus-ml/.venv/bin/python"
 if [ ! -x "$PYTHON" ]; then

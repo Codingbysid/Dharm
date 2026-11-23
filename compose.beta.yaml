@@ -11,7 +11,7 @@ services:
       DHARM_BACKEND_TOKEN: ${DHARM_BACKEND_TOKEN:?Set a private backend token}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.8-flash}
-      GEMINI_EDITOR: ${GEMINI_EDITOR:-0}
+      GEMINI_EDITOR: ${GEMINI_EDITOR:-1}
     volumes:
       - hf:/models/huggingface
 volumes:
