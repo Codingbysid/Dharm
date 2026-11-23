@@ -57,8 +57,8 @@ class TestEditorGrounding(unittest.TestCase):
             facts=["team disagrees on release", "deadline is one week"],
         )
 
-    def test_network_spy_gemini_opt_in(self):
-        """When GEMINI_EDITOR=0 or unset, no HTTP call is ever made even with an API key."""
+    def test_network_spy_gemini_follows_the_key(self):
+        """A loaded key turns the editor on. GEMINI_EDITOR=0 makes no HTTP call."""
         with patch.dict(os.environ, {"GEMINI_API_KEY": "dummy_secret_key", "GEMINI_EDITOR": "0"}):
             self.assertFalse(editor_enabled())
             with patch("httpx.post") as mock_post:
@@ -68,11 +68,10 @@ class TestEditorGrounding(unittest.TestCase):
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "dummy_secret_key"}, clear=False):
             os.environ.pop("GEMINI_EDITOR", None)
-            self.assertFalse(editor_enabled())
+            self.assertTrue(editor_enabled())
             with patch("httpx.post") as mock_post:
-                res = review_grounded_reply(self.plan, MOCK_RECORDS)
-                self.assertIsNone(res)
-                mock_post.assert_not_called()
+                review_grounded_reply(self.plan, MOCK_RECORDS)
+                mock_post.assert_called()
 
     def test_evidence_bundle_separation(self):
         """Bundle must separate classical text from modern editorial interpretation and limit."""

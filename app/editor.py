@@ -3,7 +3,7 @@
 Dharm deterministically owns the chosen disposition, action, ordered second step,
 application limit, and source citations.
 
-Gemini serves strictly as an opt-in second reader:
+Gemini rewrites the explanation when an API key is loaded. Set GEMINI_EDITOR=0 to keep Dharm's own wording.
 - Reviews support against a compact evidence bundle (classical text separated from modern interpretation).
 - Enforces strict server-side validation: evidence spans must occur verbatim in the supplied corpus text.
 - Rejects reversed actions, invented facts, qualification stripping, or unapproved passage IDs.
@@ -59,11 +59,11 @@ REVIEW_SCHEMA = {
 
 
 def editor_enabled() -> bool:
-    """Strictly opt-in: enabled only when GEMINI_EDITOR is 1/true and GEMINI_API_KEY is present."""
-    val = os.getenv("GEMINI_EDITOR", "0").strip().lower()
-    if val not in ("1", "true", "yes", "on"):
+    """On when the API key is loaded. GEMINI_EDITOR=0 is the off switch."""
+    if not os.getenv("GEMINI_API_KEY", "").strip():
         return False
-    return bool(os.getenv("GEMINI_API_KEY"))
+    val = os.getenv("GEMINI_EDITOR", "1").strip().lower()
+    return val not in ("0", "false", "no", "off")
 
 
 def build_evidence_bundle(plan, records: Dict[str, Dict[str, Any]]) -> List[Dict[str, Any]]:

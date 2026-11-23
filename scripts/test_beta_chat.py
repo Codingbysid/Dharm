@@ -225,7 +225,7 @@ class Regressions(unittest.TestCase):
         os.environ["GEMINI_API_KEY"] = "present"
         os.environ.pop("GEMINI_EDITOR", None)
         try:
-            self.assertFalse(editor_enabled())
+            self.assertTrue(editor_enabled())
             os.environ["GEMINI_EDITOR"] = "1"
             self.assertTrue(editor_enabled())
             os.environ["GEMINI_EDITOR"] = "0"
