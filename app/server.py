@@ -47,28 +47,61 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 SESSIONS: Dict[str, List[Dict[str, Any]]] = {}
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    if os.getenv("DHARM_SKIP_ENGINE") == "1":
-        app.state.engine = getattr(app.state, "engine", None)
-        app.state.records = getattr(app.state, "records", {})
-        app.state.model_lock = getattr(app.state, "model_lock", None) or asyncio.Lock()
-        yield
-        return
+def _init_empty_state(app: FastAPI) -> None:
+    app.state.engine = None
+    app.state.records = {}
+    app.state.model_lock = asyncio.Lock()
+    app.state.load_error = None
+
+
+async def _load_engine(app: FastAPI) -> None:
     print("Initializing Dharm RC1 Engine...", flush=True)
     from rc1_inference import DharmRC1Engine
-    app.state.engine = DharmRC1Engine(device="cpu")
-    app.state.model_lock = asyncio.Lock()
-    app.state.records = app.state.engine.records
+
+    engine = await run_in_threadpool(DharmRC1Engine, device="cpu")
+    app.state.engine = engine
+    app.state.records = engine.records
     print(f"Dharm RC1 Engine Ready. Loaded {len(app.state.records)} records.", flush=True)
-    yield
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _init_empty_state(app)
+    if os.getenv("DHARM_SKIP_ENGINE") == "1":
+        yield
+        return
+
+    # Listen on PORT before model load so Cloud Run startup succeeds.
+    load_task = asyncio.create_task(_load_engine(app))
+
+    def _note_failure(task: asyncio.Task) -> None:
+        if task.cancelled():
+            return
+        exc = task.exception()
+        if exc is not None:
+            app.state.load_error = str(exc)
+            print(f"Dharm RC1 Engine failed: {exc}", flush=True)
+
+    load_task.add_done_callback(_note_failure)
+    try:
+        yield
+    finally:
+        load_task.cancel()
+        try:
+            await load_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(title="Dharm", lifespan=lifespan)
 
+_PUBLIC_PATHS = {"/health", "/api/health"}
+
 
 @app.middleware("http")
 async def backend_token(request: Request, call_next):
+    if request.url.path in _PUBLIC_PATHS:
+        return await call_next(request)
     token = os.getenv("DHARM_BACKEND_TOKEN")
     if token and not secrets.compare_digest(
         request.headers.get("authorization", "").encode(), ("Bearer " + token).encode()
@@ -90,14 +123,24 @@ async def root():
     return FileResponse(index_file)
 
 
+@app.get("/health")
 @app.get("/api/health")
 async def health():
     records = getattr(app.state, "records", {}) or {}
+    error = getattr(app.state, "load_error", None)
+    ready = bool(records) and app.state.engine is not None
+    if error and not ready:
+        status = "error"
+    elif ready:
+        status = "online"
+    else:
+        status = "starting"
     return {
-        "status": "online" if records else "starting",
-        "ready": bool(records),
+        "status": status,
+        "ready": ready,
         "records_loaded": len(records),
         "editor": editor_enabled(),
+        "error": error,
     }
 
 
@@ -148,6 +191,9 @@ async def chat(request: ChatRequest):
     user_msg = request.message.strip()
     if not user_msg:
         raise HTTPException(status_code=400, detail="Message cannot be empty.")
+    if app.state.engine is None:
+        detail = getattr(app.state, "load_error", None) or "Decision engine is still starting."
+        raise HTTPException(status_code=503, detail=detail)
 
     session_id = request.session_id or str(uuid.uuid4())
     history = SESSIONS.setdefault(session_id, [])
