@@ -186,23 +186,29 @@
     }
     paintWelcome();
 
+    // Same-origin /api. Vercel rewrites that to the relay; the backend URL stays server-side.
+    const API_BASE = '';
+    let serviceUp = false;
+
     function setStatus(state) {
-      const labels = { live: 'Ready', down: 'Unavailable' };
+      const labels = { live: 'Ready', down: 'Offline' };
       statusEl.dataset.state = state;
-      statusEl.textContent = labels[state] || 'Unavailable';
+      statusEl.textContent = labels[state] || 'Offline';
+      serviceUp = state === 'live';
+      syncButtons();
     }
 
     async function checkHealth() {
       try {
-        const res = await fetch('/api/health');
-        if (!res.ok) throw new Error('unavailable');
+        const res = await fetch(API_BASE + '/api/health');
+        if (!res.ok) throw new Error('offline');
         const data = await res.json();
-        if (!data.ready) throw new Error('unavailable');
+        if (!data.ready) throw new Error('offline');
         setStatus('live');
       } catch (err) {
         setStatus('down');
         const note = column.querySelector('.welcome p');
-        if (note) note.textContent = 'The decision service is not connected, so Dharm cannot answer yet.';
+        if (note) note.textContent = 'The decision service is offline.';
       }
     }
     checkHealth();
@@ -224,7 +230,7 @@
       retryBtn.hidden = true;
     }
     function syncButtons() {
-      sendBtn.disabled = generating;
+      sendBtn.disabled = generating || !serviceUp;
       sendBtn.hidden = generating;
       stopBtn.hidden = !generating;
     }
@@ -326,6 +332,11 @@
         const principle = document.createElement('p');
         principle.textContent = item.principle;
         body.appendChild(principle);
+      }
+      if (item.caveat) {
+        const caveat = document.createElement('p');
+        caveat.textContent = item.caveat;
+        body.appendChild(caveat);
       }
       const href = safeUrl(item.source_url || '');
       if (href) {
@@ -453,7 +464,7 @@
       let answer = '';
       let metadata = null;
       try {
-        const response = await fetch('/api/chat', {
+        const response = await fetch(API_BASE + '/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, session_id: session }),

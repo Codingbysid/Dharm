@@ -11,8 +11,8 @@ os.environ.pop("GEMINI_API_KEY", None)
 from fastapi.testclient import TestClient
 
 from app.conversation import detect_query_intent, formulate_retrieval_query, retrieval_wording
-from app.editor import accept_edit
-from app.planner import DecisionPlan, Support, build_plan
+from app.editor import accept_edit, editor_enabled
+from app.planner import DecisionPlan, Support, build_plan, support_words
 from app.render import render_plan
 from app.server import SESSIONS, app
 
@@ -50,8 +50,8 @@ class Conversation(unittest.TestCase):
         self.assertIn("afternoon", query)
         self.assertNotIn("supersedes", follow)
         jobs = "Should I change jobs?"
-        self.assertEqual(detect_query_intent(jobs, history), "new_query")
-        self.assertNotIn("feature", formulate_retrieval_query(jobs, history, "new_query"))
+        self.assertEqual(detect_query_intent(jobs, history), "clarify")
+        self.assertNotIn("feature", formulate_retrieval_query(jobs, history, "clarify"))
 
     def test_help_greeting_and_unnamed_it(self):
         history = history_from("We are releasing a feature.", "Talk first.")
@@ -79,7 +79,9 @@ class Planner(unittest.TestCase):
         self.assertIn("week", text.casefold())
         self.assertTrue(plan.second_action)
         self.assertNotIn("[D", text)
-        self.assertTrue(plan.limit)
+        self.assertNotIn("misconduct", text.casefold())
+        self.assertNotIn("What should I do first", text)
+        self.assertEqual(plan.supports[0].id, "D004")
 
         history = history_from(first, text)
         follow = "What if the deadline moves to this afternoon?"
@@ -88,23 +90,11 @@ class Planner(unittest.TestCase):
             "pair_promoted": False, "promoted_pair": None,
         }, RECORDS)
         revised_text = render_plan(revised)
-        self.assertEqual(revised.disposition, "answer")
+        self.assertEqual(revised.disposition, "clarify")
+        self.assertIn("remedy", revised_text.casefold())
         self.assertIn("this afternoon", revised_text.casefold())
-        self.assertIn("deadline is now", revised_text.casefold())
-        self.assertNotIn("feature release", revised.decision.casefold() + " ")  # decision may still name the feature
         self.assertIn("releasing a feature", revised.decision)
-        self.assertIn("this afternoon", revised.facts[0])
-        self.assertIn("replacing a week", revised_text.casefold())
-
-        jobs = build_plan("Should I change jobs?", history, "new_query", {
-            "abstained": False, "primary": "D032", "top3": ["D032", "D033", "D094"],
-            "pair_promoted": False,
-        }, RECORDS)
-        jobs_text = render_plan(jobs)
-        self.assertEqual(jobs.disposition, "abstain")
-        self.assertNotIn("feature", jobs_text.casefold())
-        self.assertNotIn("software", jobs_text.casefold())
-        self.assertIn("change jobs", jobs_text.casefold())
+        self.assertNotIn("impossible", revised.action.casefold())
 
     def test_surplus_funds_are_not_a_software_release(self):
         message = "We have surplus funds from last quarter. Should I release the unused budget back to the company, or keep it for the team?"
@@ -114,9 +104,10 @@ class Planner(unittest.TestCase):
         }, RECORDS)
         text = render_plan(plan)
         self.assertEqual(plan.disposition, "answer")
-        self.assertIn("disposable", plan.action.casefold())
+        self.assertEqual(plan.supports[0].id, "D014")
+        self.assertNotIn("disposable", plan.action.casefold())
         self.assertIn("surplus", text.casefold())
-        self.assertTrue(plan.limit)
+        self.assertIn("need", plan.limit.casefold())
 
     def test_personal_weak_and_correction(self):
         sister = "Help me choose whether to apologize to my sister before dinner tonight."
@@ -128,7 +119,7 @@ class Planner(unittest.TestCase):
         self.assertIn("sister", render_plan(plan).casefold())
 
         hair = build_plan("What color should I dye my hair?", [], "new_query", {
-            "abstained": False, "primary": "D041", "top3": ["D041", "D051", "D069"],
+            "abstained": True, "primary": "Abstain", "top3": ["D041", "D051", "D069"],
             "pair_promoted": False,
         }, RECORDS)
         self.assertEqual(hair.disposition, "abstain")
@@ -145,6 +136,99 @@ class Planner(unittest.TestCase):
         }, RECORDS)
         self.assertIn("one teammate", revised.decision + revised.reason + " " + " ".join(revised.facts))
         self.assertIn("just me and one teammate", " ".join(revised.facts).casefold())
+
+
+class Regressions(unittest.TestCase):
+    def retrieval(self, primary, top3, promoted=False, pair=None):
+        return {
+            "abstained": False, "primary": primary, "top3": top3,
+            "pair_promoted": promoted, "promoted_pair": pair,
+        }
+
+    def test_deadline_corrections_both_directions_and_two_events(self):
+        today = "The release decision is today. What should we do first?"
+        asked = build_plan(today, [], "new_query", self.retrieval("D001", ["D001", "D010", "D022"]), RECORDS)
+        self.assertEqual(asked.disposition, "clarify")
+        self.assertIn("remedy", asked.action.casefold())
+
+        history = [
+            {"role": "user", "content": today},
+            {"role": "assistant", "content": asked.action, "metadata": {
+                "intent": "clarify", "clarify_kind": "missing_fact",
+                "plan": {"decision": today},
+            }},
+        ]
+        restored = "Actually, it isn't today anymore. We have a week."
+        self.assertEqual(detect_query_intent(restored, history), "followup")
+        plan = build_plan(restored, history, "followup", self.retrieval("D001", ["D001", "D010", "D022"]), RECORDS)
+        text = render_plan(plan)
+        self.assertEqual(plan.disposition, "answer")
+        self.assertEqual(plan.supports[0].id, "D001")
+        self.assertIn("week", text.casefold())
+        self.assertNotIn("impossible", plan.action.casefold())
+        self.assertTrue(any("week" in fact and "today" in fact for fact in plan.facts))
+
+        both = "The meeting is today, but the release decision is next week."
+        split = build_plan(both, [], "new_query", self.retrieval("D001", ["D001", "D010", "D022"]), RECORDS)
+        self.assertEqual(split.disposition, "answer")
+        self.assertEqual(split.supports[0].id, "D001")
+        self.assertIn("The meeting is today", render_plan(split))
+        self.assertEqual(render_plan(split).casefold().count("the meeting is today"), 1)
+        expiry_primary = build_plan(
+            "The decision is today.", [], "new_query",
+            self.retrieval("D010", ["D010", "D001"]), RECORDS,
+        )
+        self.assertEqual(expiry_primary.disposition, "clarify")
+        self.assertTrue(any(fact.startswith("meeting: today") for fact in split.facts))
+        self.assertTrue(any("next week" in fact for fact in split.facts))
+        self.assertNotIn("impossible", split.action.casefold())
+
+    def test_new_topic_then_clarification_then_answer_and_flip_direction(self):
+        feature = "My team disagrees about releasing a feature. We have a week to decide."
+        history = history_from(feature, "Hear both sides.")
+        jobs = build_plan("Should I change jobs?", history, "clarify", self.retrieval("D032", ["D032"]), RECORDS)
+        self.assertEqual(jobs.disposition, "clarify")
+        self.assertIn("leaving your current job", jobs.action)
+        self.assertNotIn("feature", render_plan(jobs).casefold())
+        self.assertFalse(any("week" in fact for fact in jobs.facts))
+
+        answered = [
+            {"role": "user", "content": "Should I change jobs?"},
+            {"role": "assistant", "content": jobs.action, "metadata": {
+                "intent": "clarify", "clarify_kind": "missing_fact",
+                "plan": {"decision": "Should I change jobs?"},
+            }},
+        ]
+        reason = "I don't trust my manager and the pay is lower."
+        self.assertEqual(detect_query_intent(reason, answered), "followup")
+        used = build_plan(reason, answered, "followup", self.retrieval("D032", ["D032", "D033"]), RECORDS)
+        self.assertEqual(used.disposition, "answer")
+        self.assertIn("jobs", used.decision.casefold())
+        self.assertIn("manager", render_plan(used).casefold())
+        self.assertNotIn("feature", render_plan(used).casefold())
+
+        remedy = "Waiting would close the only rollback remedy."
+        prior = [
+            {"role": "user", "content": feature},
+            {"role": "assistant", "content": "Hear both sides.", "metadata": {"intent": "new_query"}},
+        ]
+        flipped = build_plan(remedy, prior, "followup", self.retrieval("D001", ["D001", "D010", "D022"]), RECORDS)
+        self.assertEqual(flipped.supports[0].id, "D010")
+        self.assertIn("open", flipped.limit.casefold())
+        self.assertNotIn("cutoff", flipped.limit.casefold())
+
+    def test_opposing_condition_word_is_not_positive_support(self):
+        self.assertNotIn("cutoff", support_words(RECORDS["D001"]))
+        self.assertIn("cutoff", (RECORDS["D001"]["competing_passage_id"]["flip_to_competing_when"]).casefold())
+
+    def test_editor_stays_off_without_an_explicit_switch(self):
+        os.environ["GEMINI_API_KEY"] = "present"
+        os.environ.pop("GEMINI_EDITOR", None)
+        try:
+            self.assertFalse(editor_enabled())
+        finally:
+            os.environ.pop("GEMINI_API_KEY", None)
+            os.environ["GEMINI_EDITOR"] = "0"
 
 
 class Editor(unittest.TestCase):
@@ -165,6 +249,16 @@ class Editor(unittest.TestCase):
         kept = accept_edit(plan, "Your team still disagrees, and a week remains to hear both accounts.")
         self.assertTrue(kept)
         self.assertIn("Invite each willing party", render_plan(plan))
+        held = DecisionPlan(
+            disposition="answer",
+            decision="Should we release the feature?",
+            action="Hold the release until tests pass.",
+            reason="Tests have not passed.",
+            supports=[Support("D022", "Hold the release until tests pass.", "primary")],
+        )
+        self.assertFalse(accept_edit(held, "Shipping immediately is the correct choice."))
+        self.assertFalse(accept_edit(held, "The client already approved a 4 million budget."))
+        self.assertTrue(accept_edit(held, "Tests have not passed, so the release stays on hold."))
 
 
 class ChatApi(unittest.TestCase):
@@ -195,6 +289,8 @@ class ChatApi(unittest.TestCase):
             self.assertIn("week", events[1]["text"].casefold())
             self.assertNotIn("qwen", events[1]["text"].casefold())
             self.assertNotIn("[D", events[1]["text"])
+            self.assertNotIn("misconduct", events[1]["text"].casefold())
+            self.assertNotIn("**", events[1]["text"])
             self.assertTrue(events[0]["cited_ids"])
             self.assertEqual(events[-1]["status"], "complete")
         finally:

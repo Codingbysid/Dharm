@@ -118,8 +118,17 @@ def _citation(pid, row):
         "locator": row.get("locator", ""),
         "translation": row.get("english_translation", ""),
         "principle": row.get("derived_principle", ""),
+        "caveat": _caveat(row),
         "source_url": row.get("source_url", ""),
     }
+
+
+def _caveat(row):
+    text = (row.get("application_limit") or "").strip()
+    sentence = text.split(".")[0].strip()
+    if not sentence or "sattvic" in sentence.casefold() or "editorial" in sentence.casefold():
+        return ""
+    return sentence
 
 
 def _empty_retrieval(abstained=False):
@@ -202,10 +211,15 @@ async def chat(request: ChatRequest):
         yield f"event: metadata\ndata: {json.dumps(metadata)}\n\n"
         yield f"event: chunk\ndata: {json.dumps({'text': text})}\n\n"
         history.append({"role": "user", "content": user_msg})
+        stored_intent = "clarify" if plan.disposition == "clarify" and intent == "new_query" else intent
         history.append({
             "role": "assistant",
             "content": text,
-            "metadata": {"intent": intent, "plan": plan.as_dict()},
+            "metadata": {
+                "intent": stored_intent,
+                "clarify_kind": plan.clarify_kind,
+                "plan": plan.as_dict(),
+            },
         })
         del history[:-12]
         yield 'event: done\ndata: {"status":"complete"}\n\n'

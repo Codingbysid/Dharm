@@ -12,12 +12,40 @@ import httpx
 
 _ID = re.compile(r"\b([A-Za-z]{1,4}\d{2,4})\b")
 _NOT = re.compile(r"\b(do not|don't|never|avoid|instead of|rather than|the opposite)\b", re.I)
+# Approved contrasts. A paraphrase can reverse an action without reusing its verb.
+_CONTRARY = (
+    (("hold", "wait", "delay", "postpone", "until"),
+     ("immediately", "right away", "ship now", "shipping immediately", "release now", "ship it")),
+    (("invite", "describe", "hear"),
+     ("skip the conversation", "don't ask", "do not ask", "ignore them")),
+)
 
 
 def editor_enabled():
-    if os.getenv("GEMINI_EDITOR", "1") == "0":
-        return False
-    return bool(os.getenv("GEMINI_API_KEY"))
+    """Off unless GEMINI_EDITOR=1, even when a key is present."""
+    return os.getenv("GEMINI_EDITOR", "0") == "1" and bool(os.getenv("GEMINI_API_KEY"))
+
+
+def _contradicts(action, text):
+    folded_action = (action or "").casefold()
+    folded = text.casefold()
+    for ours, opposite in _CONTRARY:
+        if any(token in folded_action for token in ours) and any(token in folded for token in opposite):
+            return True
+        if any(token in folded_action for token in opposite) and any(token in folded for token in ours):
+            return True
+    return False
+
+
+def _invented(plan, text):
+    source = " ".join([
+        plan.decision, plan.action, plan.second_action or "", plan.reason, plan.limit or "",
+        " ".join(plan.facts or []),
+    ]).casefold()
+    for number in re.findall(r"\b\d[\d,]*\b", text):
+        if number.casefold() not in source:
+            return True
+    return False
 
 
 def _verbs(action):
@@ -36,6 +64,10 @@ def accept_edit(plan, reason):
     if mentioned or re.search(r"\b(first|next|then),", text, re.I):
         return False
     folded = text.casefold()
+    if _contradicts(plan.action, text):
+        return False
+    if _invented(plan, text):
+        return False
     if _NOT.search(text):
         for verb in _verbs(plan.action):
             if verb in folded:

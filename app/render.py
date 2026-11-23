@@ -17,9 +17,11 @@ def render_plan(plan):
         return plan.reason or "These texts do not settle that."
     parts = [plan.action]
     if plan.second_action:
-        parts.append("Then: " + plan.second_action)
+        second = plan.second_action[0].lower() + plan.second_action[1:]
+        parts.append("Then " + second)
     if plan.reason:
         parts.append(plan.reason)
     if plan.limit:
-        parts.append("This would change if: " + plan.limit)
+        limit = plan.limit[0].lower() + plan.limit[1:]
+        parts.append("This would change if " + limit + ".")
     return "\n\n".join(part for part in parts if part).strip()
