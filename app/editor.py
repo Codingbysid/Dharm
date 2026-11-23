@@ -77,41 +77,19 @@ def accept_edit(plan, reason):
     return True
 
 
-def edit_reason(plan, evidence):
-    """One server-side edit. Returns a new reason, or None to keep Dharm's."""
+def _gemini_json(prompt, schema, timeout=12.0):
     key = os.getenv("GEMINI_API_KEY", "")
-    if not key or plan.disposition != "answer":
+    if not key:
         return None
     model = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     payload = {
-        "contents": [{
-            "role": "user",
-            "parts": [{
-                "text": (
-                    "Rewrite only the reason so it is easier to read. Describe the user's situation and any deadline. "
-                    "Do not restate the action, the second step, or the limit. Do not give a new instruction. "
-                    "Do not add a source or a passage id. Do not recommend the opposite. "
-                    "Return JSON with one field, reason.\n\n"
-                    f"Decision: {plan.decision}\n"
-                    f"Action to preserve: {plan.action}\n"
-                    f"Second action to preserve: {plan.second_action or 'none'}\n"
-                    f"Limit to preserve: {plan.limit or 'none'}\n"
-                    f"Facts: {'; '.join(plan.facts) or 'none'}\n"
-                    f"Current reason: {plan.reason}\n"
-                    f"Evidence: {evidence}"
-                )
-            }],
-        }],
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.2,
+            "temperature": 0.0,
             "maxOutputTokens": 512,
             "thinkingConfig": {"thinkingBudget": 0},
             "responseMimeType": "application/json",
-            "responseSchema": {
-                "type": "OBJECT",
-                "properties": {"reason": {"type": "STRING"}},
-                "required": ["reason"],
-            },
+            "responseSchema": schema,
         },
     }
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -120,19 +98,81 @@ def edit_reason(plan, evidence):
             url,
             headers={"x-goog-api-key": key, "Content-Type": "application/json"},
             json=payload,
-            timeout=12.0,
+            timeout=timeout,
         )
     except httpx.HTTPError:
         return None
     if response.status_code != 200:
         return None
     try:
+        import json
         body = response.json()
         text = body["candidates"][0]["content"]["parts"][0]["text"]
-        import json
-        reason = json.loads(text).get("reason")
+        return json.loads(text)
     except (KeyError, IndexError, TypeError, ValueError):
         return None
+
+
+def action_fits_decision(plan):
+    """False only when Gemini says the retrieved action is about a different problem.
+
+    Missing key, errors, or unknown results keep the plan (True).
+    """
+    if plan.disposition != "answer" or not plan.action:
+        return True
+    if not os.getenv("GEMINI_API_KEY"):
+        return True
+    payload = _gemini_json(
+        (
+            "A retrieval system proposed an ACTION for a user's DECISION. "
+            "Say whether that action is actually about this decision. "
+            "fits must be false when the action belongs to a different kind of problem "
+            "(for example attestation/publication for a job-and-move choice, "
+            "or staffing/workload experiments for family caregiving). "
+            "Metaphorical stretch is not enough. Return JSON with fits.\n\n"
+            f"Decision: {plan.decision}\n"
+            f"Action: {plan.action}\n"
+            f"Limit: {plan.limit or 'none'}"
+        ),
+        {
+            "type": "OBJECT",
+            "properties": {"fits": {"type": "BOOLEAN"}},
+            "required": ["fits"],
+        },
+        timeout=8.0,
+    )
+    if not payload or "fits" not in payload:
+        return True
+    return bool(payload["fits"])
+
+
+def edit_reason(plan, evidence):
+    """One server-side edit. Returns a new reason, or None to keep Dharm's."""
+    if not os.getenv("GEMINI_API_KEY", "") or plan.disposition != "answer":
+        return None
+    payload = _gemini_json(
+        (
+            "Rewrite only the reason so it is easier to read. Describe the user's situation and any deadline. "
+            "Do not restate the action, the second step, or the limit. Do not give a new instruction. "
+            "Do not add a source or a passage id. Do not recommend the opposite. "
+            "Return JSON with one field, reason.\n\n"
+            f"Decision: {plan.decision}\n"
+            f"Action to preserve: {plan.action}\n"
+            f"Second action to preserve: {plan.second_action or 'none'}\n"
+            f"Limit to preserve: {plan.limit or 'none'}\n"
+            f"Facts: {'; '.join(plan.facts) or 'none'}\n"
+            f"Current reason: {plan.reason}\n"
+            f"Evidence: {evidence}"
+        ),
+        {
+            "type": "OBJECT",
+            "properties": {"reason": {"type": "STRING"}},
+            "required": ["reason"],
+        },
+    )
+    if not payload:
+        return None
+    reason = payload.get("reason")
     if not accept_edit(plan, reason):
         return None
     return reason.strip()

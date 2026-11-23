@@ -209,6 +209,17 @@ def _abstain(state):
     )
 
 
+def reject_unfit_plan(plan):
+    """Drop a confident answer whose retrieved action does not address the decision."""
+    decision = (plan.decision or "this").strip().rstrip(".?")
+    return DecisionPlan(
+        disposition="abstain",
+        decision=plan.decision,
+        facts=list(plan.facts or []),
+        reason=f"These texts do not settle this: {decision}.",
+    )
+
+
 def _assumes_expiry(record):
     edge = record.get("competing_passage_id") or {}
     blob = " ".join([record.get("derived_principle") or "", edge.get("retain_self_when") or ""])
