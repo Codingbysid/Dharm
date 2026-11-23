@@ -4,8 +4,11 @@ RC1 still retrieves, abstains, and verifies ordered pairs. This module does not
 change those scores.
 
 Selection rules, all explicit:
-- The ranker's primary is the action unless the user has given evidence for the
-  competing passage's own flip condition.
+- The ranker's primary is the action. The pair verifier decides an ordered
+  second step. It does not decide whether a competing edge holds.
+- Override that primary only when the conversation states the competing
+  condition's direction for the event the condition names. Shared vocabulary
+  is not that evidence. A condition this module cannot read is not an override.
 - Words that appear only in an opposing condition are not positive support.
   Support words come from the principle, cues, domain, translation, and context.
 - A deadline alone does not prove that a remedy expires. If that missing fact
@@ -37,11 +40,10 @@ _STOP = {
     "would", "your", "into", "over", "under", "than", "still", "please", "whether",
     "back", "company", "last", "quarter",
 }
-_TIME = {
-    "today", "tonight", "tomorrow", "afternoon", "morning", "week", "deadline",
-    "immediately", "hour", "hours", "right",
-}
 _EXPIRY = re.compile(r"remedy|cutoff|expir|waiting|impossible", re.I)
+_CONDITION_OPEN = re.compile(r"\b(stays open|stay open|remains open|remain open)\b", re.I)
+_CONDITION_CLOSES = re.compile(r"\b(cutoff|closes|close|expires|expiring|impossible)\b", re.I)
+_CONDITION_EVENT = re.compile(r"\b(window|remedy|cutoff|option)\b", re.I)
 _MISCONDUCT = re.compile(r"misconduct|wrongdoing|conceal|crime|fraud|abuse|illegal", re.I)
 _EDITORIAL = re.compile(r"sattvic|editorial label", re.I)
 
@@ -87,11 +89,21 @@ def support_words(record):
     return content_words(" ".join(part for part in parts if part))
 
 
-def condition_evidence(user_text, condition):
-    """Specific overlap with a flip condition, ignoring a bare time word."""
-    if not condition:
-        return set()
-    return (content_words(user_text) - _TIME) & (content_words(condition) - _TIME)
+def condition_polarity(condition):
+    """Direction a competing condition states, or None when it is not about a window.
+
+    The pair verifier does not score this edge. Only a condition that itself
+    says a window or remedy closes, or stays open, can override the retriever.
+    """
+    text = condition or ""
+    if not _CONDITION_EVENT.search(text):
+        return None
+    for clause in re.split(r"\b(?:but|however)\b|[.;]", text):
+        if _CONDITION_OPEN.search(clause):
+            return "open"
+        if _CONDITION_CLOSES.search(clause):
+            return "closes"
+    return None
 
 
 def lead_sentence(text):
@@ -205,13 +217,15 @@ def _assumes_expiry(record):
 
 def _expiry_unresolved(record, top3, state):
     """A closing deadline is not evidence that a remedy expires."""
+    if state.get("window_polarity"):
+        return None
     deadline = state.get("decision_deadline")
     if not deadline or deadline[0] != "closing" or state.get("remedy_claimed"):
         return None
     edge = record.get("competing_passage_id") or {}
     neighbor = edge.get("id")
     flip = edge.get("flip_to_competing_when") or ""
-    neighbor_would_change = neighbor in top3 and _EXPIRY.search(flip) and not condition_evidence(state.get("user_text"), flip)
+    neighbor_would_change = neighbor in top3 and condition_polarity(flip) == "closes"
     if neighbor_would_change or _assumes_expiry(record):
         return deadline[1]
     return None
@@ -242,7 +256,14 @@ def build_plan(message, history, intent, retrieval, records):
     flipped = False
     edge = records[primary].get("competing_passage_id") or {}
     neighbor = edge.get("id")
-    if neighbor in top3 and neighbor in records and condition_evidence(state.get("user_text"), edge.get("flip_to_competing_when")):
+    stated = state.get("window_polarity")
+    # Same direction, and the condition is about that window. A shared noun is not enough.
+    if (
+        stated
+        and neighbor in top3
+        and neighbor in records
+        and condition_polarity(edge.get("flip_to_competing_when")) == stated
+    ):
         chosen = neighbor
         flipped = True
 

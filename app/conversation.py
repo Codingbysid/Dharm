@@ -38,6 +38,22 @@ _REASON_OR_CONSTRAINT = re.compile(
     r"\b(because|so that|deadline|week|today|tonight|tomorrow|afternoon|disagree|budget|funds|between|team)\b",
     re.I,
 )
+_WINDOW = re.compile(r"\b(window|remedy|rollback|option)\b", re.I)
+_CLOSES = re.compile(
+    r"\b(closes|closing|closed|close|expires|expire|expiring|becomes impossible|lose the option)\b",
+    re.I,
+)
+_OPENS = re.compile(r"\b(stays open|stay open|remains open|remain open)\b", re.I)
+_NEGATED_CLOSE = re.compile(
+    r"\b(?:not|no longer|never|isn'?t|is not|doesn'?t|does not|won'?t|will not)\s+"
+    r"(?:\w+\s+){0,3}?(?:close|closes|closing|expire|expires|expiring)\b",
+    re.I,
+)
+_NEGATED_OPEN = re.compile(
+    r"\b(?:not|no longer|never|isn'?t|is not|doesn'?t|does not)\s+"
+    r"(?:stay|stays|staying|remain|remains|remaining)\s+open\b",
+    re.I,
+)
 _REMEDY = re.compile(
     r"\b(remedy|rollback|window closes|expires|expire|becomes impossible|lose the option)\b",
     re.I,
@@ -232,15 +248,32 @@ def _same_when(left, right):
     return left[1].casefold() == right[1].casefold()
 
 
+def _window_update(clause):
+    """Direction stated for a window or remedy. None means this clause does not say."""
+    if not _WINDOW.search(clause or ""):
+        return None
+    if _OPENS.search(clause) and not _NEGATED_OPEN.search(clause):
+        return "open"
+    if _NEGATED_OPEN.search(clause) or _NEGATED_CLOSE.search(clause):
+        return "clear"
+    if _CLOSES.search(clause):
+        return "closes"
+    return None
+
+
 def apply_timed_facts(messages):
-    """Walk the topic in order. A negation clears the deadline it names."""
+    """Walk the topic in order. A negation clears the deadline or window direction it names."""
     decision_deadline = None
     previous_deadline = None
     meeting = None
-    remedy = False
+    window = None
     for message in messages:
-        if _REMEDY.search(message):
-            remedy = True
+        for clause in _clauses(message):
+            update = _window_update(clause)
+            if update == "clear":
+                window = None
+            elif update:
+                window = update
         for event in timed_events(message):
             when = event["when"]
             if event["negated"]:
@@ -251,8 +284,9 @@ def apply_timed_facts(messages):
             if event["event"] == "meeting":
                 meeting = when
                 continue
+            # A time on the window belongs to that window, not to the decision deadline.
             if event["event"] == "remedy":
-                remedy = True
+                continue
             if decision_deadline and not _same_when(decision_deadline, when):
                 previous_deadline = decision_deadline
             decision_deadline = when
@@ -260,7 +294,8 @@ def apply_timed_facts(messages):
         "decision_deadline": decision_deadline,
         "previous_deadline": previous_deadline,
         "meeting": meeting,
-        "remedy_claimed": remedy,
+        "window_polarity": window,
+        "remedy_claimed": window == "closes",
     }
 
 

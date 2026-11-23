@@ -231,6 +231,59 @@ class Regressions(unittest.TestCase):
             os.environ["GEMINI_EDITOR"] = "0"
 
 
+class WindowDirection(unittest.TestCase):
+    """Fresh examples. Same words, opposite window directions, written apart from Q01–Q42."""
+
+    def retrieval(self, primary, top3):
+        return {
+            "abstained": False, "primary": primary, "top3": top3,
+            "pair_promoted": False, "promoted_pair": None,
+        }
+
+    def test_same_words_require_different_decisions(self):
+        retrieval = self.retrieval("D001", ["D001", "D010", "D022"])
+        closing = build_plan("The appeal window closes today.", [], "new_query", retrieval, RECORDS)
+        self.assertEqual(closing.disposition, "answer")
+        self.assertEqual(closing.supports[0].id, "D010")
+        self.assertEqual(closing.action, "Check what will become impossible with delay.")
+        self.assertIn("stays open", closing.limit.casefold())
+
+        opened = build_plan(
+            "The meeting is today; the appeal window stays open.",
+            [], "new_query", retrieval, RECORDS,
+        )
+        self.assertEqual(opened.disposition, "answer")
+        self.assertEqual(opened.supports[0].id, "D001")
+        self.assertEqual(opened.action, "Record the constraints each party must meet.")
+        self.assertIn("cutoff", opened.limit.casefold())
+        self.assertNotIn("impossible", opened.action.casefold())
+
+    def test_correction_reverses_the_window_and_an_unrelated_noun_does_not(self):
+        closing = "The appeal window closes today."
+        first = build_plan(closing, [], "new_query", self.retrieval("D001", ["D001", "D010"]), RECORDS)
+        self.assertEqual(first.supports[0].id, "D010")
+        history = history_from(closing, render_plan(first))
+        correction = "Actually, the appeal window stays open."
+        self.assertEqual(detect_query_intent(correction, history), "followup")
+        revised = build_plan(
+            correction, history, "followup",
+            self.retrieval("D010", ["D010", "D001"]), RECORDS,
+        )
+        self.assertEqual(revised.disposition, "answer")
+        self.assertEqual(revised.supports[0].id, "D001")
+        self.assertIn("cutoff", revised.limit.casefold())
+        self.assertNotIn("impossible", revised.action.casefold())
+
+        unrelated = build_plan(
+            "The visitor left the appeal forms on the front window.",
+            [], "new_query", self.retrieval("D058", ["D058", "D057"]), RECORDS,
+        )
+        self.assertEqual(unrelated.disposition, "answer")
+        self.assertEqual(unrelated.supports[0].id, "D058")
+        self.assertIn("identity", unrelated.action.casefold())
+        self.assertIn("public service", unrelated.limit.casefold())
+
+
 class Editor(unittest.TestCase):
     def plan(self):
         return DecisionPlan(
