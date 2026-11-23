@@ -10,4 +10,5 @@ COPY decision-corpus-ml/data/decisions_v0.2.jsonl decision-corpus-ml/data/chanak
 COPY decision-corpus-ml/artifacts-v1.1/abstention_clf.joblib decision-corpus-ml/artifacts-v1.1/
 COPY decision-corpus-ml/artifacts-v1.6/workflow_router.joblib decision-corpus-ml/artifacts-v1.6/pair_verifier_model.joblib decision-corpus-ml/artifacts-v1.6/pair_scorer_config.json decision-corpus-ml/artifacts-v1.6/verifier_config.json decision-corpus-ml/artifacts-v1.6/
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000"]
+ENV PORT=8000
+CMD ["sh", "-c", "python -m uvicorn app.server:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -26,4 +26,4 @@ cd app/static && mkdir -p public && cp index.html public/index.html
 
 ## Backend host
 
-Hugging Face Docker Spaces now require PRO. Static Spaces cannot run this API. Prefer a free-tier host that can keep about 2 GB of RAM for the CPU models, or a small always-free VM. The root `Dockerfile` is the image. Set `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash`, and `DHARM_BACKEND_TOKEN` as secrets on that host only. Gemini stays on because the key is present. Set `GEMINI_EDITOR=0` only to turn it off.
+Hugging Face Docker Spaces now require PRO. Static Spaces cannot run this API. Prefer Google Cloud Run (or another host with about 2 GB of RAM). The root `Dockerfile` listens on `$PORT`. Set `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash`, and `DHARM_BACKEND_TOKEN` as secrets on that host only. Gemini stays on because the key is present. Set `GEMINI_EDITOR=0` only to turn it off. On Vercel, set `DHARM_BACKEND_URL` to the Cloud Run HTTPS URL and the same `DHARM_BACKEND_TOKEN`.
