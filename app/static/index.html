@@ -446,7 +446,7 @@
 
     async function sendMessage(resendText) {
       const text = (resendText || input.value).trim();
-      if (!text || generating) return;
+      if (!text || generating || !serviceUp) return;
       const turn = epoch;
       const session = sessionId;
       const live = () => turn === epoch && session === sessionId;
