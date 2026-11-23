@@ -1,0 +1,19 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      DHARM_BACKEND_TOKEN: ${DHARM_BACKEND_TOKEN:?Set a private backend token}
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - hf:/models/huggingface
+  ollama:
+    image: ollama/ollama
+    volumes:
+      - ollama:/root/.ollama
+volumes:
+  hf:
+  ollama:

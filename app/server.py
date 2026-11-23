@@ -7,6 +7,7 @@ Serves:
 - In-memory isolated multi-turn session management.
 - Static web chat UI (/ and static assets).
 """
+import secrets
 import asyncio
 from contextlib import asynccontextmanager
 import json
@@ -17,9 +18,9 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Add decision-corpus-ml to python path so rc1_inference can be imported cleanly
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,14 +28,12 @@ ML_DIR = BASE_DIR / "decision-corpus-ml"
 if str(ML_DIR) not in sys.path:
     sys.path.insert(0, str(ML_DIR))
 
-from rc1_inference import DharmRC1Engine
+
 from app.generator import (
     build_system_prompt,
     detect_query_intent,
     formulate_retrieval_query,
-    get_api_key,
-    stream_gemini_response,
-    stream_retrieval_preview_response,
+    MODEL, WELCOME, local_model_available, stream_answer,
 )
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -48,7 +47,9 @@ async def lifespan(app: FastAPI):
     """Load retrieval models and indices once at server startup."""
     print("=" * 80)
     print("Initializing Dharm RC1 Engine (Loading models once per process)...")
+    from rc1_inference import DharmRC1Engine
     app.state.engine = DharmRC1Engine(device="cpu")
+    app.state.model_lock = asyncio.Lock()
     app.state.records = app.state.engine.records
     print(f"Dharm RC1 Engine Ready! Loaded {len(app.state.records)} corpus records.")
     print("=" * 80)
@@ -58,18 +59,19 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Dharm Local Chat Application", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.middleware("http")
+async def backend_token(request: Request, call_next):
+    token = os.getenv("DHARM_BACKEND_TOKEN")
+    if token and not secrets.compare_digest(
+        request.headers.get("authorization", "").encode(), ("Bearer " + token).encode()
+    ):
+        return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return await call_next(request)
 
 
 class ChatRequest(BaseModel):
-    message: str
-    session_id: Optional[str] = None
+    message: str = Field(max_length=4000)
+    session_id: Optional[str] = Field(default=None, max_length=128)
 
 
 @app.get("/")
@@ -84,14 +86,13 @@ async def root():
 @app.get("/api/health")
 async def health():
     """Health check endpoint showing model, provider, and active session count."""
-    api_key = get_api_key()
-    mode = "Live Generation (Gemini 2.5 Flash)" if api_key else "Retrieval Preview Mode (Set GEMINI_API_KEY)"
+    ready = await local_model_available()
     return {
         "status": "online",
         "engine": "DharmRC1Engine",
         "release_candidate": "pair-verifier-rc1",
-        "provider_mode": mode,
-        "api_key_configured": bool(api_key),
+        "provider_mode": MODEL if ready else "Sources only",
+        "generation_ready": ready,
         "total_sessions": len(SESSIONS),
         "records_loaded": len(app.state.records),
     }
@@ -120,7 +121,7 @@ async def get_citation(passage_id: str):
         "sequence_role": r.get("complementary_passage_id", {}).get("sequence_role", ""),
         "contrast_condition": r.get("competing_passage_id", {}).get("condition", ""),
         "contrast_target_id": r.get("competing_passage_id", {}).get("id", ""),
-        "source_url": r.get("source_url") or r.get("retrieval_cues", ""),
+        "source_url": r.get("source_url", ""),
     }
 
 
@@ -177,7 +178,8 @@ async def chat(request: ChatRequest):
         }
     else:
         # Run local RC1 inference
-        retrieval_res = engine.predict(query_text)
+        async with app.state.model_lock:
+            retrieval_res = await run_in_threadpool(engine.predict, query_text)
 
     # 3. Build verified citation metadata
     validated_citations = []
@@ -193,11 +195,11 @@ async def chat(request: ChatRequest):
                 "translation": r["english_translation"],
                 "context": r["context_summary"],
                 "modern_application": r["scenarios_json"][0]["scenario"] if r.get("scenarios_json") else "",
-                "source_url": r.get("source_url") or r.get("retrieval_cues", ""),
+                "source_url": r.get("source_url", ""),
             })
 
-    api_key = get_api_key()
-    provider_mode = "Live Generation (Gemini 2.5 Flash)" if api_key else "Retrieval Preview Mode (Set GEMINI_API_KEY)"
+    ready = await local_model_available() if intent != "greeting" and not retrieval_res["abstained"] else False
+    provider_mode = MODEL if ready else "Sources only"
 
     metadata_payload = {
         "session_id": session_id,
@@ -215,7 +217,7 @@ async def chat(request: ChatRequest):
         "reformulated_query": query_text if intent == "followup" else None,
     }
 
-    system_prompt = build_system_prompt(records, retrieval_res, intent)
+    system_prompt = build_system_prompt(records, retrieval_res, intent) if ready else ""
 
     async def event_generator():
         # Emit metadata event first
@@ -224,19 +226,19 @@ async def chat(request: ChatRequest):
         full_assistant_reply = []
 
         try:
-            if api_key and intent != "greeting":
-                async for chunk in stream_gemini_response(api_key, system_prompt, user_msg, history):
+            if ready:
+                async for chunk in stream_answer(system_prompt, query_text):
                     full_assistant_reply.append(chunk)
                     yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
             else:
-                # Use structured preview mode
-                async for chunk in stream_retrieval_preview_response(records, retrieval_res, user_msg, intent):
-                    full_assistant_reply.append(chunk)
-                    yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
-                    # Gentle artificial pacing for preview mode
-                    await asyncio.sleep(0.02)
-
-            yield f"event: done\ndata: {json.dumps({'status': 'complete'})}\n\n"
+                if intent == "greeting":
+                    text = WELCOME
+                elif retrieval_res["abstained"]:
+                    text = "I couldn't ground this question in a passage. What decision are you trying to make?"
+                else:
+                    text = "Local generation is unavailable. You can explore the retrieved sources below."
+                full_assistant_reply.append(text)
+                yield f"event: chunk\ndata: {json.dumps({'text': text})}\n\n"
 
             # Save to conversation history
             complete_text = "".join(full_assistant_reply)
@@ -247,8 +249,11 @@ async def chat(request: ChatRequest):
                 "metadata": metadata_payload,
             })
 
-        except Exception as e:
-            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+            del history[:-12]
+            yield 'event: done\ndata: {"status":"complete"}\n\n'
+
+        except Exception:
+            yield f"event: error\ndata: {json.dumps({'error': 'Could not complete the reply. Please retry.'})}\n\n"
 
     return StreamingResponse(
         event_generator(),

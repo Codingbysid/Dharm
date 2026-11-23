@@ -371,8 +371,7 @@
     <!-- Initial Greeting -->
     <div class="message-row assistant">
       <div class="bubble">
-        <p><strong>Welcome to Dharm</strong>. I am your institutional decision assistant grounded in classical governance and statecraft principles (Arthashastra, Chanakya traditions).</p>
-        <p>Present any administrative impasse, sequential workflow challenge, or prioritization dilemma to receive an authoritative, grounded decision recommendation.</p>
+        <p><strong>What decision are you weighing?</strong> Explore it with passages from the Vedas, Upanishads, Bhagavad Gita, and Chanakya tradition.</p>
       </div>
     </div>
   </div>
@@ -381,7 +380,7 @@
     <div class="composer-inner">
       <div id="error-toast" class="error-banner"></div>
       <div class="input-box-wrapper">
-        <textarea id="message-input" placeholder="Describe an institutional dilemma, priority conflict, or ask a question..." rows="1"></textarea>
+        <textarea id="message-input" placeholder="Describe a decision or ask a follow-up…" rows="1"></textarea>
         <div class="btn-group">
           <button id="stop-btn" class="stop-btn" onclick="stopGeneration()">Stop</button>
           <button id="retry-btn" class="retry-btn" onclick="retryLast()">Retry</button>
@@ -396,7 +395,7 @@
   </footer>
 
   <script>
-    let currentSessionId = 'session_' + Math.random().toString(36).substring(2, 10);
+    let currentSessionId = crypto.randomUUID();
     let lastFailedMessage = '';
     let abortController = null;
     let isGenerating = false;
@@ -428,14 +427,15 @@
     async function checkHealth() {
       try {
         const res = await fetch('/api/health');
-        if (res.ok) {
+        if (!res.ok) throw new Error("Backend unavailable");
+        {
           const data = await res.json();
-          if (data.api_key_configured) {
+          if (data.generation_ready) {
             modeIndicator.className = 'mode-badge mode-live';
-            modeIndicator.textContent = 'Live Generation: Gemini 2.5 Flash';
+            modeIndicator.textContent = data.provider_mode;
           } else {
             modeIndicator.className = 'mode-badge mode-preview';
-            modeIndicator.textContent = 'Retrieval Preview Mode (Set GEMINI_API_KEY)';
+            modeIndicator.textContent = 'Sources only';
           }
         }
       } catch (e) {
@@ -446,7 +446,7 @@
 
     function startNewChat() {
       if (isGenerating) stopGeneration();
-      currentSessionId = 'session_' + Math.random().toString(36).substring(2, 10);
+      currentSessionId = crypto.randomUUID();
       sessionInfo.textContent = 'Session: ' + currentSessionId.slice(-6);
 
       chatContainer.innerHTML = `
@@ -613,7 +613,7 @@
           assistantBubble.innerHTML += '<p><em>[Stream stopped by user]</em></p>';
         } else {
           showError(`Send error: ${err.message}. Draft preserved.`);
-          assistantBubble.innerHTML = `<p style="color:#f87171;"><strong>Error:</strong> ${err.message}</p>`;
+          assistantBubble.textContent = err.message;
           // Restore draft to input so user never loses work
           messageInput.value = lastFailedMessage;
         }
@@ -629,7 +629,7 @@
 
       const header = document.createElement('div');
       header.className = 'citations-header';
-      header.textContent = `Authoritative Corpus Citations (${meta.citations.length})`;
+      header.textContent = `Retrieved sources (${meta.citations.length})`;
       container.appendChild(header);
 
       const chips = document.createElement('div');

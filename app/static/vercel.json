@@ -1,0 +1,9 @@
+{
+  "buildCommand": "mkdir -p public && cp index.html public/index.html",
+  "outputDirectory": "public",
+  "functions": {"api/relay.mjs": {"maxDuration": 120}},
+  "rewrites": [
+    {"source": "/api/health", "destination": "/api/relay?route=health"},
+    {"source": "/api/chat", "destination": "/api/relay?route=chat"}
+  ]
+}
