@@ -1,0 +1,9 @@
+.git
+.venv
+decision-corpus-ml/.venv
+.env
+.env.*
+.vercel
+**/__pycache__
+**/*.pyc
+**/.cache
