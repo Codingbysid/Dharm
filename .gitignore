@@ -22,3 +22,6 @@ __pycache__/
 # System & OS metadata
 .DS_Store
 Thumbs.db
+
+# Local secrets. Never commit API keys.
+.env

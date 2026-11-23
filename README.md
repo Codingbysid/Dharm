@@ -29,11 +29,14 @@ A machine learning framework and benchmark suite for ethical dilemma arbitration
 ├── README.md                                # Comprehensive overview and benchmarks
 ├── README_v1.0.md                           # Detailed v1.0 specification and diagnostic notes
 ├── requirements.txt                         # Top-level dependencies
-├── decisions_v0.2.jsonl                     # 108 core passage records (JSONL format)
-├── decisions_v0.2.csv                       # 108 core passage records (CSV format)
-├── chanakya_daily_supplement.jsonl          # Supplement passages
-├── eval_queries_v0.2.jsonl                  # 42 evaluation dilemmas (contrast pairs, synthesis, abstentions)
+├── decisions_v0.2.csv                       # CSV copy kept for review; no runtime reader
 ├── train_retriever_and_arbitrator.py        # Top-level training script
+│
+│   The chat runtime reads only decision-corpus-ml/data. The root JSONL copies matched
+│   those files by SHA-256 and were removed:
+│   decisions_v0.2.jsonl 18d35df30acf268c76088f477e328688bd56220d18abb0cbf9b8de4ec260043f
+│   chanakya_daily_supplement.jsonl ca7e5ebb9ddab447a8f874ade4da05a0d82db691d825ba50dcf9097af94232c8
+│   eval_queries_v0.2.jsonl 6a284a3250bba9ad08c5aee9a0ce8ec0032290ab8982758726498a9ba6bd96e9
 │
 └── decision-corpus-ml/                      # Main ML development directory
     ├── requirements.txt                     # Pinned package requirements
