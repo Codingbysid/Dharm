@@ -367,6 +367,8 @@ class ChatApi(unittest.TestCase):
                     "pair_promoted": True,
                     "promoted_pair": ["D004", "D001"],
                 }
+        saved_key = os.environ.pop("GEMINI_API_KEY", None)
+        os.environ["GEMINI_EDITOR"] = "0"
         app.state.engine = Engine()
         app.state.records = {pid: RECORDS[pid] for pid in ("D004", "D001", "D010")}
         app.state.model_lock = asyncio.Lock()
@@ -393,3 +395,7 @@ class ChatApi(unittest.TestCase):
         finally:
             SESSIONS.pop("api-test", None)
             client.close()
+            if saved_key is not None:
+                os.environ["GEMINI_API_KEY"] = saved_key
+            else:
+                os.environ.pop("GEMINI_API_KEY", None)
