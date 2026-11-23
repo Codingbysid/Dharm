@@ -371,8 +371,10 @@ class ChatApi(unittest.TestCase):
         app.state.records = {pid: RECORDS[pid] for pid in ("D004", "D001", "D010")}
         app.state.model_lock = asyncio.Lock()
         client = TestClient(app)
+        token = os.getenv("DHARM_BACKEND_TOKEN", "")
+        headers = {"Authorization": "Bearer " + token} if token else {}
         try:
-            response = client.post("/api/chat", json={
+            response = client.post("/api/chat", headers=headers, json={
                 "message": "My team disagrees about releasing a feature. We have a week to decide. What should I do first?",
                 "session_id": "api-test",
             })
