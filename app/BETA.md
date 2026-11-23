@@ -24,6 +24,6 @@ cd app/static && mkdir -p public && cp index.html public/index.html
 
 `compose.beta.yaml` is the later backend shape. It does not include Ollama.
 
-## Hugging Face Space
+## Backend host
 
-The free CPU Space builds the root `Dockerfile` and listens on port 8000. Create a Docker Space from this repo, hardware CPU Basic. In the Space secrets, set `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash`, and `DHARM_BACKEND_TOKEN` to the same value as in local `.env`. Do not put those values in the frontend. Gemini stays on because the key is present. Set `GEMINI_EDITOR=0` on the Space only to turn it off.
+Hugging Face Docker Spaces now require PRO. Static Spaces cannot run this API. Prefer a free-tier host that can keep about 2 GB of RAM for the CPU models, or a small always-free VM. The root `Dockerfile` is the image. Set `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash`, and `DHARM_BACKEND_TOKEN` as secrets on that host only. Gemini stays on because the key is present. Set `GEMINI_EDITOR=0` only to turn it off.
