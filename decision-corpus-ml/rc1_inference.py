@@ -66,7 +66,7 @@ def read_rows(path: Path, key: str) -> Dict[str, Dict[str, Any]]:
 
 def load_corpus(folder: Path) -> Dict[str, Dict[str, Any]]:
     records = read_rows(folder / "decisions_v0.2.jsonl", "id")
-    require(set(records) == {f"D{i:03}" for i in range(1, 109)}, "Expected D001–D108")
+    require(set(records) == {f"D{i:03}" for i in range(1, 121)}, "Expected D001–D120")
     for k, r in records.items():
         require(len(r) == 24 and len(r["scenarios_json"]) == 2, f"Unexpected schema for {k}")
         for edge in (CONTRAST, WORKFLOW):
@@ -80,23 +80,59 @@ def load_corpus(folder: Path) -> Dict[str, Dict[str, Any]]:
     notes = read_rows(folder / "chanakya_daily_supplement.jsonl", "note_id")
     for note, row in notes.items():
         target = row.get("existing_record_id") or SUPPLEMENT.get(note)
-        if target and target in records:
+        if target and target in records and row.get("modern_application"):
             records[target]["scenarios_json"].append({"scenario": row["modern_application"]})
+    transfer_path = folder / "transfer_supplement_v1.jsonl"
+    if transfer_path.exists():
+        for line in transfer_path.read_text(encoding="utf8").splitlines():
+            if not line.strip():
+                continue
+            row = json.loads(line)
+            target = row.get("existing_record_id")
+            scenario = row.get("scenario")
+            if target in records and scenario:
+                records[target]["scenarios_json"].append({"scenario": scenario})
     return records
 
 
 def passage_card(r: Dict[str, Any]) -> str:
+    """Display card. Narrative text stays available for citations, not for ranking."""
     return (f"[{r['id']}] {r['work']} {r['locator']} | Domain: {r['decision_domain']} | "
             f"Urgency: {r['urgency_level']} | Reversibility: {r['reversibility']}\n"
             f"Principle: {r['derived_principle']}\nContext: {r['context_summary']}\n"
             f"Text: {r['english_translation']}\nCues: {r['retrieval_cues']}")
 
 
+def transfer_card(r: Dict[str, Any]) -> str:
+    """Ranking card for TF-IDF and the cross-encoder.
+
+    Verse text, the narrative summary, and scenario sentences stay out of this
+    card. Scenario wording is scored only on the scenario embedding channel, so
+    a story noun such as a delivery or a shipment cannot outrank the principle.
+    """
+    edge = r.get(CONTRAST) or {}
+    return (f"Principle: {r.get('derived_principle', '')}\n"
+            f"Domain: {r.get('decision_domain', '')}\n"
+            f"Cues: {r.get('retrieval_cues', '')}\n"
+            f"Retain: {edge.get('retain_self_when', '')}\n"
+            f"Flip: {edge.get('flip_to_competing_when', '')}")
+
+
 def tfidf_doc(r: Dict[str, Any]) -> str:
-    scenarios_text = " ".join(s["scenario"] for s in r["scenarios_json"])
-    comp_cond = r[CONTRAST].get("condition", "")
-    seq_role = r[WORKFLOW].get("sequence_role", "")
-    return f"{passage_card(r)}\n{scenarios_text}\n{comp_cond}\n{seq_role}"
+    return transfer_card(r)
+
+
+class TransferProjection(torch.nn.Module):
+    """Residual map on frozen BGE vectors. Zero-initialized residual starts as identity."""
+
+    def __init__(self, dim: int = 384, hidden: int = 128):
+        super().__init__()
+        self.down = torch.nn.Linear(dim, hidden)
+        self.up = torch.nn.Linear(hidden, dim)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        y = x + self.up(torch.nn.functional.relu(self.down(x)))
+        return torch.nn.functional.normalize(y, dim=-1)
 
 
 def pair_joint_card(u_rec: Dict[str, Any], v_rec: Dict[str, Any]) -> str:
@@ -112,6 +148,15 @@ def expand_pool(seeds: List[str], records: Dict[str, Dict[str, Any]]) -> List[st
     return sorted({j for k in seeds for j in (k, records[k][CONTRAST]["id"], records[k][WORKFLOW]["id"])})
 
 
+def both_transfer_supported(dense_map: Dict[str, float], left: str, right: str) -> bool:
+    """Competing and workflow edges may break a tie. They may not promote a neighbor
+    whose transfer similarity is far below the passage that actually matched.
+    """
+    hi = max(float(dense_map.get(left, 0.0)), float(dense_map.get(right, 0.0)))
+    lo = min(float(dense_map.get(left, 0.0)), float(dense_map.get(right, 0.0)))
+    return not (hi - lo > 0.12 and lo < 0.22)
+
+
 def min_max_normalize(scores_dict: Dict[str, float], subset_keys: List[str]) -> Dict[str, float]:
     vals = [scores_dict[k] for k in subset_keys]
     mi, ma = min(vals), max(vals)
@@ -122,23 +167,24 @@ def min_max_normalize(scores_dict: Dict[str, float], subset_keys: List[str]) -> 
 
 class MultiVectorHybridRRFIndex:
     """Stage 1: Multi-Vector Max-Sim Dense Retrieval + Lexical TF-IDF fused with RRF."""
-    def __init__(self, bi: SentenceTransformer, records: Dict[str, Dict[str, Any]]):
+    def __init__(self, bi: SentenceTransformer, records: Dict[str, Dict[str, Any]], project=None):
         self.bi = bi
         self.records = records
         self.keys = sorted(records.keys())
+        self.project = project
 
-        # Passage card dense embeddings
-        passage_cards = [passage_card(records[k]) for k in self.keys]
-        self.card_embs = self.bi.encode(passage_cards, normalize_embeddings=True, show_progress_bar=False)
+        # Transfer-card dense embeddings. Narrative verse text is not indexed.
+        passage_cards = [transfer_card(records[k]) for k in self.keys]
+        self.card_embs = self._encode(passage_cards)
 
         # Scenario dense embeddings with owner index mapping
         scenario_texts = []
         scenario_owner_idx = []
         for idx, k in enumerate(self.keys):
             for s in records[k]["scenarios_json"]:
-                scenario_texts.append(s["scenario"])
+                scenario_texts.append(QUERY_PREFIX + s["scenario"])
                 scenario_owner_idx.append(idx)
-        self.scen_embs = self.bi.encode(scenario_texts, normalize_embeddings=True, show_progress_bar=False)
+        self.scen_embs = self._encode(scenario_texts)
         self.scenario_owner_idx = np.array(scenario_owner_idx)
 
         # Lexical TF-IDF index
@@ -146,8 +192,14 @@ class MultiVectorHybridRRFIndex:
         self.vectorizer = TfidfVectorizer(ngram_range=(1, 2), stop_words="english", sublinear_tf=True)
         self.tfidf_matrix = self.vectorizer.fit_transform(tfidf_docs)
 
-    def search_with_scores(self, query_texts: List[str], top_k: int = 7) -> List[Tuple[List[str], Dict[str, float]]]:
-        q_embs = self.bi.encode([QUERY_PREFIX + t for t in query_texts], normalize_embeddings=True, show_progress_bar=False)
+    def _encode(self, texts: List[str]):
+        embs = self.bi.encode(texts, normalize_embeddings=True, show_progress_bar=False)
+        if self.project is None:
+            return embs
+        return np.asarray(self.project(embs))
+
+    def search_with_scores(self, query_texts: List[str], top_k: int = 7):
+        q_embs = self._encode([QUERY_PREFIX + t for t in query_texts])
 
         card_sims = q_embs @ self.card_embs.T  # (num_q, 108)
         scen_sims = q_embs @ self.scen_embs.T  # (num_q, num_scenarios)
@@ -169,9 +221,12 @@ class MultiVectorHybridRRFIndex:
             rank_d = {self.keys[idx]: r for r, idx in enumerate(d_order, 1)}
             rank_t = {self.keys[idx]: r for r, idx in enumerate(t_order, 1)}
 
-            rrf_scores = {k: 1.0 / (20.0 + rank_d[k]) + 1.0 / (20.0 + rank_t[k]) for k in self.keys}
+            # Semantic transfer outweighs the cleaned lexical channel.
+            rrf_scores = {k: 0.70 / (20.0 + rank_d[k]) + 0.30 / (20.0 + rank_t[k]) for k in self.keys}
             seeds = sorted(self.keys, key=lambda k: (-rrf_scores[k], k))[:top_k]
-            results.append((seeds, rrf_scores))
+            dense_map = {self.keys[idx]: float(dense_scores[i, idx]) for idx in range(len(self.keys))}
+            scen_map = {self.keys[idx]: float(max_scen_sims[i, idx]) for idx in range(len(self.keys))}
+            results.append((seeds, rrf_scores, dense_map, scen_map))
         return results
 
 
@@ -229,14 +284,29 @@ class DharmRC1Engine:
         self.retain_texts = {k: self.records[k][CONTRAST]["retain_self_when"] for k in self.keys}
         self.flip_texts = {k: self.records[k][CONTRAST]["flip_to_competing_when"] for k in self.keys}
 
-        # 2. Neural Embedder & Stage-1 Index
+        # 2. Neural Embedder, transfer projection, and Stage-1 index
         self.bi_model = SentenceTransformer(BI_MODEL, device=self.device)
-        self.hybrid_index = MultiVectorHybridRRFIndex(self.bi_model, self.records)
+        self.transfer = self._load_transfer()
+        self.hybrid_index = MultiVectorHybridRRFIndex(
+            self.bi_model, self.records, project=self._project_matrix,
+        )
+        self.rank_cards = {k: transfer_card(self.records[k]) for k in self.keys}
 
-        # 3. Dedicated Abstention Classifier
-        abst_path = self.artifacts_v1_1 / "abstention_clf.joblib"
+        # 3. Dedicated Abstention Classifier (projected space when v1.6 exists)
+        abst_v16 = self.artifacts_v1_6 / "abstention_clf.joblib"
+        abst_path = abst_v16 if abst_v16.exists() else self.artifacts_v1_1 / "abstention_clf.joblib"
         require(abst_path.exists(), f"Missing abstention model at {abst_path}")
         self.abstention_clf = joblib.load(abst_path)
+        suit_path = self.artifacts_v1_6 / "suitability_clf.joblib"
+        self.suitability_clf = joblib.load(suit_path) if suit_path.exists() else None
+        suit_cfg_path = self.artifacts_v1_6 / "suitability_config.json"
+        self.suitability_threshold = 0.5
+        if suit_cfg_path.exists():
+            self.suitability_threshold = float(json.loads(suit_cfg_path.read_text(encoding="utf8"))["threshold"])
+        abst_cfg_path = self.artifacts_v1_6 / "abstention_config.json"
+        self.abstention_threshold = 0.65
+        if abst_cfg_path.exists():
+            self.abstention_threshold = float(json.loads(abst_cfg_path.read_text(encoding="utf8"))["threshold"])
 
         # 4. Cross-Encoder Reranker
         self.ce_tok = AutoTokenizer.from_pretrained(CE_MODEL)
@@ -268,10 +338,35 @@ class DharmRC1Engine:
         self.verifier_cfg = json.loads(verifier_cfg_path.read_text(encoding="utf8"))
         self.verifier_thresh = float(self.verifier_cfg["calibrated_threshold"])  # 0.5700
         self.feature_names = self.verifier_cfg["features"]
+        self.transfer_verifier = bool(self.verifier_cfg.get("transfer_v2"))
 
         verifier_model_path = self.artifacts_v1_6 / "pair_verifier_model.joblib"
         require(verifier_model_path.exists(), f"Missing verifier model at {verifier_model_path}")
         self.verifier_clf = joblib.load(verifier_model_path)
+
+    def _load_transfer(self):
+        path = self.artifacts_v1_6 / "transfer_proj.pt"
+        if not path.exists():
+            return None
+        model = TransferProjection()
+        state = torch.load(path, map_location="cpu")
+        model.load_state_dict(state["state_dict"] if isinstance(state, dict) and "state_dict" in state else state)
+        model.eval()
+        return model
+
+    def _project_matrix(self, embs: np.ndarray) -> np.ndarray:
+        if self.transfer is None:
+            return embs
+        with torch.inference_mode():
+            tensor = torch.tensor(np.asarray(embs), dtype=torch.float32)
+            if tensor.ndim == 1:
+                tensor = tensor.unsqueeze(0)
+                return self.transfer(tensor).cpu().numpy()[0]
+            return self.transfer(tensor).cpu().numpy()
+
+    def _embed_query(self, text: str) -> np.ndarray:
+        emb = self.bi_model.encode([QUERY_PREFIX + text], normalize_embeddings=True, show_progress_bar=False)
+        return np.asarray(self._project_matrix(emb)[0])
 
     def predict(self, text: str) -> Dict[str, Any]:
         """Execute complete inference on raw dilemma text string."""
@@ -279,20 +374,20 @@ class DharmRC1Engine:
         require(len(text) > 0, "Dilemma text must not be empty.")
 
         # --- Stage 0: Epistemic Abstention Gate ---
-        q_emb = self.bi_model.encode([QUERY_PREFIX + text], normalize_embeddings=True, show_progress_bar=False)[0]
+        q_emb = self._embed_query(text)
         abst_prob = float(self.abstention_clf.predict_proba([q_emb])[0, 1])
-        abstained = bool(abst_prob > 0.65)
+        abstained = bool(abst_prob > self.abstention_threshold)
 
         # --- Stage 1: Multi-Vector Stage-1 Hybrid RRF Retrieval ---
         search_res = self.hybrid_index.search_with_scores([text], top_k=7)
-        seeds, rrf_scores = search_res[0]
+        seeds, rrf_scores, dense_map, scen_map = search_res[0]
         pool = expand_pool(seeds, self.records)
 
         # --- Stage 2: Frozen v1.3 Fallback Candidate Ranking ---
         rrf_norm = min_max_normalize(rrf_scores, pool)
 
-        # Single cross-encoder passage scores
-        ce_pairs = [[text, self.passage_cards[k]] for k in pool]
+        # Cross-encoder sees the transfer card, not the narrative verse.
+        ce_pairs = [[text, self.rank_cards[k]] for k in pool]
         ce_raw_scores = batch_score_ce(self.ce_model, self.ce_tok, ce_pairs, self.device)
         s_dict = dict(zip(pool, ce_raw_scores))
         ce_norm = min_max_normalize(s_dict, pool)
@@ -317,16 +412,18 @@ class DharmRC1Engine:
                     continue
                 processed_pairs.add(pair_key)
                 topical_max = max(base[u], base[v])
-                if topical_max >= 0.72:
+                if topical_max >= 0.72 and both_transfer_supported(dense_map, u, v):
                     r_u, f_u = r_scores[u], f_scores[u]
                     r_v, f_v = r_scores[v], f_scores[v]
                     net_uv = 0.5 * ((f_u - r_u) + (r_v - f_v))
-                    if net_uv > 0.05:
-                        final[v] = max(final[v], topical_max + 0.15 * net_uv)
+                    # Pick a direction inside the pair. Do not add a bonus that lets the
+                    # competitor leap over a different passage with a stronger match.
+                    if net_uv > 0.15:
+                        final[v] = max(final[v], topical_max)
                         final[u] = min(final[u], topical_max - 0.05 * net_uv)
-                    elif net_uv < -0.05:
+                    elif net_uv < -0.15:
                         net_vu = -net_uv
-                        final[u] = max(final[u], topical_max + 0.15 * net_vu)
+                        final[u] = max(final[u], topical_max)
                         final[v] = min(final[v], topical_max - 0.05 * net_vu)
 
         # v1.3 workflow ordering bonus
@@ -338,17 +435,46 @@ class DharmRC1Engine:
                 if pair_key in workflow_pairs:
                     continue
                 workflow_pairs.add(pair_key)
-                if max(base[u], base[c]) >= 0.70 and min(base[u], base[c]) >= 0.35:
+                if (max(base[u], base[c]) >= 0.70 and min(base[u], base[c]) >= 0.35
+                        and both_transfer_supported(dense_map, u, c)):
                     seq = self.records[u][WORKFLOW]["sequence_role"]
                     if seq.startswith("Follow with"):
                         first, second = u, c
                     else:
                         first, second = c, u
                     pair_top = max(base[first], base[second])
-                    final[first] = max(final[first], pair_top + 0.10)
-                    final[second] = max(final[second], pair_top + 0.06)
+
+                    def _cap(score, passage, partner):
+                        blockers = [
+                            base[k] for k in pool
+                            if k not in (passage, partner)
+                            and dense_map.get(k, 0.0) > dense_map.get(passage, 0.0) + 0.02
+                        ]
+                        if not blockers:
+                            return score
+                        return min(score, min(blockers) - 0.01)
+
+                    final[first] = max(final[first], _cap(pair_top + 0.10, first, second))
+                    final[second] = max(final[second], _cap(pair_top + 0.06, second, first))
 
         fallback_top3 = sorted(pool, key=lambda k: (-final[k], k))[:3]
+        # Suitability was trained on the best dense match, not the cross-encoder's pick.
+        dense_order = sorted(dense_map, key=lambda k: (-dense_map[k], k))
+        if self.suitability_clf is not None and dense_order:
+            top1 = dense_order[0]
+            top2 = dense_order[1] if len(dense_order) > 1 else top1
+            top1_dense = float(dense_map.get(top1, 0.0))
+            top2_dense = float(dense_map.get(top2, 0.0))
+            suit_feats = [[
+                abst_prob,
+                top1_dense,
+                top1_dense - top2_dense,
+                top1_dense,
+                float(scen_map.get(top1, 0.0)),
+            ]]
+            in_scope = float(self.suitability_clf.predict_proba(suit_feats)[0, 1])
+            if in_scope < self.suitability_threshold:
+                abstained = True
         fallback_primary = "Abstain" if abstained else fallback_top3[0]
 
         # Upstream router intent probability
@@ -380,16 +506,25 @@ class DharmRC1Engine:
                 final_top3 = fallback_top3
                 final_primary = fallback_primary
             else:
-                # Score joint cards
-                joint_pairs = [[text, pair_joint_card(self.records[u], self.records[v])] for u, v in pairs_in_pool]
-                joint_scores = batch_score_ce(self.ce_model, self.ce_tok, joint_pairs, self.device)
-                j_dict = dict(zip(pairs_in_pool, joint_scores))
+                if self.transfer_verifier:
+                    j_dict = {
+                        (u, v): 0.5 * (float(dense_map[u]) + float(dense_map[v]))
+                        for u, v in pairs_in_pool
+                    }
+                    pair_scores = dense_map
+                    fallback_rank = sorted(self.keys, key=lambda k: (-dense_map[k], k))
+                else:
+                    joint_pairs = [[text, pair_joint_card(self.records[u], self.records[v])] for u, v in pairs_in_pool]
+                    joint_scores = batch_score_ce(self.ce_model, self.ce_tok, joint_pairs, self.device)
+                    j_dict = dict(zip(pairs_in_pool, joint_scores))
+                    pair_scores = s_dict
+                    fallback_rank = sorted(pool, key=lambda k: (-s_dict[k], k))
 
-                max_pool_s = max(s_dict.values())
+                max_pool_s = max(pair_scores[k] for k in pool)
                 qualifying = []
                 for (u, v), j_val in j_dict.items():
-                    max_self = max(s_dict[u], s_dict[v])
-                    min_self = min(s_dict[u], s_dict[v])
+                    max_self = max(pair_scores[u], pair_scores[v])
+                    min_self = min(pair_scores[u], pair_scores[v])
                     diff_self = j_val - max_self
                     diff_pool = j_val - max_pool_s
                     diff_min = j_val - min_self
@@ -416,8 +551,6 @@ class DharmRC1Engine:
                     u_prop, v_prop = best["pair"]
                     proposed_pair = [u_prop, v_prop]
 
-                    # Rank features in pool based on single-passage cross-encoder scores
-                    fallback_rank = sorted(pool, key=lambda k: (-s_dict[k], k))
                     ru = fallback_rank.index(u_prop) + 1 if u_prop in fallback_rank else 99
                     rv = fallback_rank.index(v_prop) + 1 if v_prop in fallback_rank else 99
                     min_r = min(ru, rv)

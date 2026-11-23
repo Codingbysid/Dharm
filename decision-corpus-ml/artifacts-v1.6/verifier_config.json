@@ -18,7 +18,7 @@
     "both_in_top5",
     "router_prob"
   ],
-  "calibrated_threshold": 0.57,
+  "calibrated_threshold": 0.4,
   "cv_metrics": {
     "total_proposals": 482,
     "total_true_proposals": 112,
@@ -32,5 +32,6 @@
   "upstream_router": "artifacts-v1.6/workflow_router.joblib",
   "pair_scorer": "BAAI/bge-reranker-base (tau_self=-0.5, tau_pool=-1.0)",
   "fallback": "v1.3 exact bit-for-bit",
-  "config_sha256": "5be7becdc389871d92dcab4b37a3a8e9687fe51930a8fb2de0d50e0ac49494ea"
+  "config_sha256": "5be7becdc389871d92dcab4b37a3a8e9687fe51930a8fb2de0d50e0ac49494ea",
+  "transfer_v2": true
 }

@@ -1,0 +1,298 @@
+{
+  "records": 120,
+  "abstention_threshold": 0.5,
+  "q_recall_at_1": [
+    20,
+    38
+  ],
+  "q_recall_at_3": [
+    28,
+    38
+  ],
+  "q_abstention": [
+    4,
+    4
+  ],
+  "transfer_hit": [
+    22,
+    24
+  ],
+  "q_misses": [
+    "Q01 gold=D001 primary=D010 top3=['D010', 'D042', 'D074']",
+    "Q09 gold=D035 primary=D009 top3=['D009', 'D100', 'D057']",
+    "Q20 gold=D040 primary=D060 top3=['D060', 'D063', 'D013']",
+    "Q28 gold=D068 primary=D067 top3=['D067', 'D060', 'D095']",
+    "Q29 gold=D064 primary=D042 top3=['D042', 'D038', 'D016']",
+    "Q33 gold=D089 primary=D023 top3=['D023', 'D035', 'D114']",
+    "Q36 gold=D082 primary=D076 top3=['D076', 'D028', 'D106']",
+    "Q37 gold=D093 primary=D094 top3=['D094', 'D018', 'D084']",
+    "Q39 gold=D105 primary=D033 top3=['D033', 'D002', 'D106']",
+    "Q40 gold=D106 primary=D074 top3=['D074', 'D105', 'D033']"
+  ],
+  "transfer": [
+    {
+      "query_id": "L01",
+      "mark": "primary",
+      "primary": "D119",
+      "top3": [
+        "D119",
+        "D120",
+        "D031"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L02",
+      "mark": "primary",
+      "primary": "D111",
+      "top3": [
+        "D111",
+        "D112",
+        "D117"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L03",
+      "mark": "primary",
+      "primary": "D118",
+      "top3": [
+        "D118",
+        "D110",
+        "D115"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L04",
+      "mark": "top3",
+      "primary": "D110",
+      "top3": [
+        "D110",
+        "D063",
+        "D064"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L05",
+      "mark": "primary",
+      "primary": "D117",
+      "top3": [
+        "D117",
+        "D118",
+        "D042"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L06",
+      "mark": "top3",
+      "primary": "D119",
+      "top3": [
+        "D119",
+        "D120",
+        "D115"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L07",
+      "mark": "primary",
+      "primary": "D115",
+      "top3": [
+        "D115",
+        "D116",
+        "D118"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L08",
+      "mark": "primary",
+      "primary": "D113",
+      "top3": [
+        "D113",
+        "D114",
+        "D110"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L09",
+      "mark": "primary",
+      "primary": "D113",
+      "top3": [
+        "D113",
+        "D007",
+        "D108"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L10",
+      "mark": "primary",
+      "primary": "D111",
+      "top3": [
+        "D111",
+        "D112",
+        "D113"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L11",
+      "mark": "primary",
+      "primary": "D115",
+      "top3": [
+        "D115",
+        "D048",
+        "D052"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L12",
+      "mark": "top3",
+      "primary": "D109",
+      "top3": [
+        "D109",
+        "D119",
+        "D110"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L13",
+      "mark": "miss",
+      "primary": "D110",
+      "top3": [
+        "D110",
+        "D114",
+        "D118"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L14",
+      "mark": "primary",
+      "primary": "D115",
+      "top3": [
+        "D115",
+        "D116",
+        "D118"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L15",
+      "mark": "top3",
+      "primary": "D112",
+      "top3": [
+        "D112",
+        "D117",
+        "D017"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L16",
+      "mark": "top3",
+      "primary": "D116",
+      "top3": [
+        "D116",
+        "D115",
+        "D111"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L17",
+      "mark": "primary",
+      "primary": "D112",
+      "top3": [
+        "D112",
+        "D107",
+        "D056"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L18",
+      "mark": "primary",
+      "primary": "D118",
+      "top3": [
+        "D118",
+        "D064",
+        "D117"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L19",
+      "mark": "miss",
+      "primary": "D082",
+      "top3": [
+        "D082",
+        "D111",
+        "D106"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L20",
+      "mark": "top3",
+      "primary": "D110",
+      "top3": [
+        "D110",
+        "D118",
+        "D116"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L21",
+      "mark": "primary",
+      "primary": "D075",
+      "top3": [
+        "D075",
+        "D076",
+        "D003"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L22",
+      "mark": "top3",
+      "primary": "D117",
+      "top3": [
+        "D117",
+        "D115",
+        "D116"
+      ],
+      "abstained": false
+    },
+    {
+      "query_id": "L23",
+      "mark": "abstain",
+      "primary": "Abstain",
+      "top3": [
+        "D051",
+        "D052",
+        "D098"
+      ],
+      "abstained": true
+    },
+    {
+      "query_id": "L24",
+      "mark": "abstain",
+      "primary": "Abstain",
+      "top3": [
+        "D029",
+        "D068",
+        "D101"
+      ],
+      "abstained": true
+    }
+  ]
+}

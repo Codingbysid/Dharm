@@ -16,6 +16,8 @@ __pycache__/
 # Model binary weights (>100MB exceeds GitHub push limit; reproduced deterministically via scripts)
 *.safetensors
 *.pt
+# The transfer adapter is a 388 KB residual, not a full encoder checkpoint.
+!decision-corpus-ml/artifacts-v1.6/transfer_proj.pt
 *.bin
 *.onnx
 
@@ -25,3 +27,5 @@ Thumbs.db
 
 # Local secrets. Never commit API keys.
 .env
+.vercel
+.env*

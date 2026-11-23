@@ -46,6 +46,10 @@ _CONDITION_CLOSES = re.compile(r"\b(cutoff|closes|close|expires|expiring|impossi
 _CONDITION_EVENT = re.compile(r"\b(window|remedy|cutoff|option)\b", re.I)
 _MISCONDUCT = re.compile(r"misconduct|wrongdoing|conceal|crime|fraud|abuse|illegal", re.I)
 _EDITORIAL = re.compile(r"sattvic|editorial label", re.I)
+_NARROW = re.compile(
+    r"\b(shift|caption|museum|ferry|procurement|ledger|publication|staffing|berth|planetarium)\b",
+    re.I,
+)
 
 
 @dataclass
@@ -66,6 +70,8 @@ class DecisionPlan:
     limit: str = ""
     second_action: str = ""
     clarify_kind: str = ""
+    teaching: str = ""
+    applied: str = ""
 
     def as_dict(self):
         payload = asdict(self)
@@ -185,6 +191,8 @@ def _limit(record, user_text):
         return ""
     if _MISCONDUCT.search(text) and not _MISCONDUCT.search(user_text or ""):
         return ""
+    if _NARROW.search(text) and not _NARROW.search(user_text or ""):
+        return ""
     return text
 
 
@@ -280,6 +288,10 @@ def build_plan(message, history, intent, retrieval, records):
 
     record = records[chosen]
     action = lead_sentence(record.get("derived_principle") or "")
+    verse = lead_sentence(record.get("english_translation") or "")
+    work = (record.get("work") or "").strip()
+    locator = (record.get("locator") or "").strip()
+    teaching = f"{work} {locator}: {verse}".strip() if work and verse else ""
     supports = [Support(chosen, action, "primary")]
     promoted = [pid for pid in (retrieval.get("promoted_pair") or []) if pid in records] if retrieval.get("pair_promoted") else []
     second = ""
@@ -295,4 +307,5 @@ def build_plan(message, history, intent, retrieval, records):
         supports=supports,
         limit=_limit(record, state.get("user_text")),
         second_action=second,
+        teaching=teaching,
     )

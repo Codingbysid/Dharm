@@ -39,8 +39,8 @@ def _load_local_env():
 _load_local_env()
 
 from app.conversation import detect_query_intent, formulate_retrieval_query
-from app.editor import accept_edit, action_fits_decision, edit_reason, editor_enabled
-from app.planner import build_plan, reject_unfit_plan
+from app.editor import accept_edit, editor_enabled, synthesize_grounded_reply
+from app.planner import build_plan
 from app.render import render_plan
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -211,16 +211,6 @@ async def chat(request: ChatRequest):
 
     plan = build_plan(user_msg, history, intent, retrieval, records)
     edited = False
-    if plan.disposition == "answer" and os.getenv("GEMINI_API_KEY"):
-        try:
-            fits = await asyncio.wait_for(
-                run_in_threadpool(action_fits_decision, plan),
-                timeout=10,
-            )
-        except Exception:
-            fits = True
-        if not fits:
-            plan = reject_unfit_plan(plan)
     if plan.disposition == "answer" and editor_enabled():
         evidence = [
             {"id": item.id, "principle": item.principle}
@@ -228,17 +218,19 @@ async def chat(request: ChatRequest):
         ]
         try:
             rewritten = await asyncio.wait_for(
-                run_in_threadpool(edit_reason, plan, evidence),
+                run_in_threadpool(synthesize_grounded_reply, plan, evidence),
                 timeout=12,
             )
         except Exception:
             rewritten = None
         if rewritten and accept_edit(plan, rewritten):
-            plan.reason = rewritten
+            plan.applied = rewritten
             edited = True
     text = render_plan(plan)
-    cited_ids = [item.id for item in plan.supports]
-    citations = [_citation(pid, records[pid]) for pid in (retrieval.get("top3") or []) if pid in records]
+    cited_ids = [item.id for item in plan.supports] if plan.disposition == "answer" else []
+    citations = []
+    if plan.disposition == "answer":
+        citations = [_citation(pid, records[pid]) for pid in (retrieval.get("top3") or []) if pid in records]
 
     metadata = {
         "session_id": session_id,

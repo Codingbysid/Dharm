@@ -56,7 +56,18 @@ def render_plan(plan):
         return question
     if plan.disposition == "abstain":
         return plan.reason or "These texts do not settle that."
-    parts = [plan.action]
+    if getattr(plan, "applied", ""):
+        text = plan.applied.strip()
+        if plan.limit:
+            head = " ".join(plan.limit.casefold().split()[:8])
+            if head and head not in text.casefold():
+                limit = plan.limit[0].lower() + plan.limit[1:]
+                text = text.rstrip() + "\n\nThis would change if " + limit + "."
+        return text
+    parts = []
+    if getattr(plan, "teaching", ""):
+        parts.append(plan.teaching)
+    parts.append(plan.action)
     if plan.second_action:
         second = plan.second_action[0].lower() + plan.second_action[1:]
         parts.append("Then " + second)

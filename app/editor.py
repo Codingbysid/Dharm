@@ -42,6 +42,7 @@ def _contradicts(action, text):
 def _invented(plan, text):
     source = " ".join([
         plan.decision, plan.action, plan.second_action or "", plan.reason, plan.limit or "",
+        getattr(plan, "teaching", "") or "",
         " ".join(plan.facts or []),
     ]).casefold()
     for number in re.findall(r"\b\d[\d,]*\b", text):
@@ -70,9 +71,12 @@ def accept_edit(plan, reason):
         return False
     if _invented(plan, text):
         return False
-    if _NOT.search(text):
+    if not _NOT.search(plan.action or ""):
         for verb in _verbs(plan.action):
-            if verb in folded:
+            if re.search(
+                rf"\b(?:do not|don't|never|avoid|instead of|rather than|the opposite)\s+(?:\w+\s+){{0,3}}{re.escape(verb)}\b",
+                folded,
+            ):
                 return False
     return True
 
@@ -144,6 +148,39 @@ def action_fits_decision(plan):
     if not payload or "fits" not in payload:
         return True
     return bool(payload["fits"])
+
+
+def synthesize_grounded_reply(plan, evidence):
+    """Apply the retrieved teaching to this decision. None keeps the template."""
+    if not os.getenv("GEMINI_API_KEY", "") or plan.disposition != "answer":
+        return None
+    payload = _gemini_json(
+        (
+            "Apply the cited teaching to the user's decision in two to four plain sentences. "
+            "Name the work and the locator once. Say how the teaching bears on this decision and on any deadline. "
+            "Keep the same direction as the action. Do not recommend the opposite. "
+            "Do not add a passage id or a number that was not already given. "
+            "Return JSON with one field, reply.\n\n"
+            f"Decision: {plan.decision}\n"
+            f"Teaching: {getattr(plan, 'teaching', '') or 'none'}\n"
+            f"Action to preserve: {plan.action}\n"
+            f"Second action to preserve: {plan.second_action or 'none'}\n"
+            f"Limit to preserve: {plan.limit or 'none'}\n"
+            f"Facts: {'; '.join(plan.facts) or 'none'}\n"
+            f"Evidence: {evidence}"
+        ),
+        {
+            "type": "OBJECT",
+            "properties": {"reply": {"type": "STRING"}},
+            "required": ["reply"],
+        },
+    )
+    if not payload:
+        return None
+    reply = (payload.get("reply") or "").strip()
+    if not accept_edit(plan, reply):
+        return None
+    return reply
 
 
 def edit_reason(plan, evidence):
